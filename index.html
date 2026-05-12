@@ -455,6 +455,10 @@
         style="background:var(--azul);color:#fff;border:none;border-radius:12px;padding:12px 28px;font-size:15px;font-weight:700;cursor:pointer">
         <i class="bi bi-person-plus-fill"></i> Añadir miembro
       </button>
+      <button onclick="openRecordarPwd()"
+        style="background:#5E35B1;color:#fff;border:none;border-radius:12px;padding:12px 28px;font-size:15px;font-weight:700;cursor:pointer">
+        <i class="bi bi-envelope-fill"></i> Recordar contraseña
+      </button>
       <button onclick="openImportViajes()"
         style="background:var(--verde);color:#fff;border:none;border-radius:12px;padding:12px 28px;font-size:15px;font-weight:700;cursor:pointer">
         <i class="bi bi-clock-history"></i> Importar viajes anteriores
@@ -573,6 +577,53 @@
   </div>
 </div>
 
+<!-- MODAL: RECORDAR CONTRASEÑA (admin) -->
+<div id="modalRecordarPwd" class="modal-backdrop modal-center" style="display:none" onclick="closeModal('modalRecordarPwd',event)">
+  <div class="modal-sheet" onclick="event.stopPropagation()" style="max-height:90dvh;overflow-y:auto">
+    <div class="modal-title"><i class="bi bi-envelope-fill"></i> Enviar contraseña</div>
+    <div class="form-field">
+      <label class="form-label">Miembro</label>
+      <select id="recorMiembro" class="form-select"></select>
+    </div>
+    <div class="form-field">
+      <label class="form-label">Nueva contraseña <small style="color:#999;font-weight:400">(se actualizará y se enviará por email)</small></label>
+      <input type="text" id="recorPwd" class="form-input" placeholder="Escribe la nueva contraseña">
+    </div>
+    <div id="recorError" class="login-error"></div>
+    <div class="modal-btns" style="margin-top:4px">
+      <button class="btn-cancel" onclick="closeModal('modalRecordarPwd')">Cancelar</button>
+      <button class="btn-confirm" onclick="sendRecordarPwd()"><i class="bi bi-envelope-fill"></i> Enviar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: CAMBIAR CONTRASEÑA (primer login) -->
+<div id="modalCambiarPwd" class="modal-backdrop modal-center" style="display:none">
+  <div class="modal-sheet" onclick="event.stopPropagation()" style="max-height:90dvh;overflow-y:auto">
+    <div class="modal-title">🔐 Tu contraseña</div>
+    <p style="font-size:13px;color:#555;margin:0 0 16px">Tu contraseña actual es la que te asignó el administrador.<br>¿Quieres cambiarla ahora?</p>
+    <div id="pwdFormSection" style="display:none">
+      <div class="form-field">
+        <label class="form-label">Nueva contraseña</label>
+        <input type="password" id="pwdNueva" class="form-input" placeholder="Mínimo 6 caracteres">
+      </div>
+      <div class="form-field">
+        <label class="form-label">Confirmar contraseña</label>
+        <input type="password" id="pwdConfirm" class="form-input" placeholder="Repite la contraseña">
+      </div>
+      <div id="pwdErr" class="login-error"></div>
+    </div>
+    <div id="pwdBtnsInitial" class="modal-btns">
+      <button class="btn-cancel" onclick="skipPwdChange()">No, continuar</button>
+      <button class="btn-confirm" onclick="showPwdForm()">Sí, cambiar</button>
+    </div>
+    <div id="pwdBtnsForm" class="modal-btns" style="display:none">
+      <button class="btn-cancel" onclick="skipPwdChange()">Cancelar</button>
+      <button class="btn-confirm" onclick="savePwdChange()">Guardar</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL: OCULTAR BLOQUE CUADRANTE -->
 <div id="modalOcultarGrupo" class="modal-backdrop" style="display:none" onclick="closeModal('modalOcultarGrupo',event)">
   <div class="modal-sheet" onclick="event.stopPropagation()">
@@ -674,6 +725,7 @@ async function doLogin() {
     };
     localStorage.setItem('mcSession', JSON.stringify(session));
     await iniciarApp();
+    checkPrimerLogin();
   } catch (err) {
     console.error(err);
     errEl.textContent = 'Error de conexión';
@@ -1569,6 +1621,118 @@ function showToast(msg, type) {
   el.className   = `toast-msg show ${type || ''}`;
   clearTimeout(_toastTimer);
   _toastTimer = setTimeout(() => el.classList.remove('show'), 3200);
+}
+
+// ════════════════════════════════════
+//  CONTRASEÑA — PRIMER LOGIN
+// ════════════════════════════════════
+function checkPrimerLogin() {
+  const key = `mcPwdPrompted_${session.miembroId}`;
+  if (localStorage.getItem(key)) return;
+  document.getElementById('pwdFormSection').style.display  = 'none';
+  document.getElementById('pwdBtnsInitial').style.display  = 'flex';
+  document.getElementById('pwdBtnsForm').style.display     = 'none';
+  document.getElementById('pwdErr').textContent            = '';
+  document.getElementById('modalCambiarPwd').style.display = 'flex';
+}
+
+function skipPwdChange() {
+  localStorage.setItem(`mcPwdPrompted_${session.miembroId}`, '1');
+  document.getElementById('modalCambiarPwd').style.display = 'none';
+}
+
+function showPwdForm() {
+  document.getElementById('pwdFormSection').style.display = 'block';
+  document.getElementById('pwdBtnsInitial').style.display = 'none';
+  document.getElementById('pwdBtnsForm').style.display    = 'flex';
+}
+
+async function savePwdChange() {
+  const nueva   = document.getElementById('pwdNueva').value;
+  const confirm = document.getElementById('pwdConfirm').value;
+  const errEl   = document.getElementById('pwdErr');
+  errEl.textContent = '';
+  if (nueva.length < 6)    { errEl.textContent = 'Mínimo 6 caracteres'; return; }
+  if (nueva !== confirm)   { errEl.textContent = 'Las contraseñas no coinciden'; return; }
+  try {
+    const { error } = await db.rpc('change_password', { p_id: session.miembroId, p_new_password: nueva });
+    if (error) throw error;
+    skipPwdChange();
+    showToast('Contraseña actualizada ✓', 'ok');
+  } catch {
+    errEl.textContent = 'Error al guardar. Inténtalo de nuevo.';
+  }
+}
+
+// ════════════════════════════════════
+//  CONTRASEÑA — ADMIN: RECORDAR
+// ════════════════════════════════════
+function openRecordarPwd() {
+  const sel = document.getElementById('recorMiembro');
+  sel.innerHTML = state.miembrosActivos
+    .filter(m => m.email)
+    .map(m => `<option value="${m.id}" data-email="${m.email}">${m.nombre}</option>`)
+    .join('');
+  document.getElementById('recorPwd').value     = '';
+  document.getElementById('recorError').textContent = '';
+  document.getElementById('modalRecordarPwd').style.display = 'flex';
+}
+
+async function sendRecordarPwd() {
+  const sel    = document.getElementById('recorMiembro');
+  const membId = sel.value;
+  const email  = sel.selectedOptions[0]?.dataset.email;
+  const nombre = sel.selectedOptions[0]?.text;
+  const pwd    = document.getElementById('recorPwd').value.trim();
+  const errEl  = document.getElementById('recorError');
+  errEl.textContent = '';
+  if (!pwd)            { errEl.textContent = 'Escribe una contraseña'; return; }
+  if (pwd.length < 4)  { errEl.textContent = 'Mínimo 4 caracteres'; return; }
+  if (!email)          { errEl.textContent = 'Este miembro no tiene email asignado'; return; }
+  try {
+    const { error } = await db.rpc('change_password', { p_id: membId, p_new_password: pwd });
+    if (error) throw error;
+    const res = await fetch('/api/send-email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        to:      email,
+        subject: '🚗 Tus datos de acceso — miCunda',
+        html:    buildPwdEmail(nombre, email, pwd, session.cundaNombre)
+      })
+    });
+    if (!res.ok) throw new Error('email_fail');
+    closeModal('modalRecordarPwd');
+    showToast(`Email enviado a ${nombre} ✓`, 'ok');
+  } catch {
+    errEl.textContent = 'Error al enviar. Inténtalo de nuevo.';
+  }
+}
+
+function buildPwdEmail(nombre, email, pwd, cundaNombre) {
+  return `<!DOCTYPE html>
+<html lang="es">
+<body style="margin:0;padding:0;background:#ECEFF1;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
+<div style="max-width:480px;margin:0 auto;padding:20px">
+  <div style="background:#1a4a8a;padding:20px 24px;border-radius:12px 12px 0 0;text-align:center">
+    <div style="font-size:30px">🚗</div>
+    <h1 style="color:#fff;margin:6px 0 2px;font-size:21px;font-weight:800">miCunda</h1>
+    <p style="color:rgba(255,255,255,.7);margin:0;font-size:13px">${cundaNombre}</p>
+  </div>
+  <div style="background:#fff;padding:24px;border-radius:0 0 12px 12px;border:1px solid #e0e0e0;border-top:none">
+    <p style="font-size:14px;color:#333;margin:0 0 18px">Hola <strong>${nombre}</strong>, aquí tienes tus datos de acceso a miCunda:</p>
+    <div style="background:#F8FAFC;border-radius:8px;padding:16px;margin-bottom:18px">
+      <div style="font-size:12px;color:#888;margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">Email</div>
+      <div style="font-size:15px;font-weight:700;color:#333;margin-bottom:14px">${email}</div>
+      <div style="font-size:12px;color:#888;margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">Contraseña</div>
+      <div style="font-size:18px;font-weight:800;color:#1a4a8a;letter-spacing:1px">${pwd}</div>
+    </div>
+    <p style="font-size:13px;color:#888;margin:0 0 4px">Accede en <a href="https://micunda.es" style="color:#1a4a8a;font-weight:700;text-decoration:none">micunda.es</a></p>
+    <p style="font-size:11px;color:#bbb;margin:8px 0 0">Te recomendamos cambiar la contraseña la primera vez que entres.</p>
+  </div>
+</div>
+</body>
+</html>`;
 }
 
 // ════════════════════════════════════
