@@ -760,7 +760,7 @@ async function iniciarApp() {
   document.getElementById('hdrUser').textContent  = session.nombre + (session.rol === 'admin' ? ' · Admin' : '');
 
   // Mostrar tab admin si corresponde
-  document.getElementById('navAdmin').style.display = session.rol === 'admin' ? 'flex' : 'none';
+  document.getElementById('navAdmin').style.display = session.rol === 'admin' ? '' : 'none';
 
   showLoading(true);
   try {
