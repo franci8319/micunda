@@ -1009,119 +1009,142 @@ async function registrarViaje(conductorId) {
 // ════════════════════════════════════
 //  RENDER: CUADRANTE
 // ════════════════════════════════════
+function buildGroups(viajes) {
+  const groups = {};
+  viajes.forEach(v => {
+    const k = grupoKey(v.conductor_id, v.asistentes);
+    if (!groups[k]) {
+      const mg = [v.conductor_id, ...(v.asistentes || [])]
+        .map(id => state.miembros.find(m => m.id === id))
+        .filter(Boolean)
+        .sort((a, b) => a.nombre.localeCompare(b.nombre));
+      groups[k] = { miembros: mg, trips: [] };
+    }
+    groups[k].trips.push(v);
+  });
+  return groups;
+}
+
+function buildGrupoHTML(key, grupo, canHide) {
+  const label = grupo.miembros.map(m => m.nombre.split(' ')[0]).join(' · ');
+  const btnOcultar = canHide
+    ? `<button onclick="confirmarOcultarGrupo('${key}','${label.replace(/'/g, "\\'")}')" title="Ocultar"
+         style="margin-left:auto;background:none;border:none;cursor:pointer;color:#CCC;font-size:14px;padding:2px 6px;border-radius:6px;line-height:1"
+         onmouseover="this.style.color='#C62828';this.style.background='#FFEBEE'"
+         onmouseout="this.style.color='#CCC';this.style.background='none'">
+         <i class="bi bi-trash"></i></button>`
+    : '';
+  let h = `<div class="cq-block-header"><span class="cq-block-dot"></span>${label}${btnOcultar}</div>`;
+  h += `<div class="cuadrante-scroll"><table class="cq-table"><thead><tr><th class="cq-th-name"></th>`;
+  grupo.trips.forEach((v, i) => {
+    const [,mo,d] = v.fecha.split('-');
+    h += `<th class="cq-th-trip">${i+1}<span>${d}/${mo}</span></th>`;
+  });
+  h += `</tr></thead><tbody>`;
+  grupo.miembros.forEach(mb => {
+    const cnt  = grupo.trips.filter(v => v.conductor_id === mb.id).length;
+    const nom  = mb.deleted_at
+      ? `<span style="text-decoration:line-through;color:#aaa">${mb.nombre.split(' ')[0]}</span>`
+      : mb.nombre.split(' ')[0];
+    h += `<tr><td class="cq-td-name">${nom}${cnt > 0 ? `<span class="cq-count">(${cnt})</span>` : ''}</td>`;
+    grupo.trips.forEach(v => {
+      if (v.conductor_id === mb.id) {
+        const [,mo,d] = v.fecha.split('-');
+        h += `<td class="cq-cell hit"><i class="bi bi-check-lg cq-check"></i><span class="cq-date">${d}/${mo}</span></td>`;
+      } else { h += `<td class="cq-cell"></td>`; }
+    });
+    h += `</tr>`;
+  });
+  h += `</tbody></table></div>`;
+  return h;
+}
+
 function renderCuadrante() {
   const cont = document.getElementById('cuadranteContent');
   cont.innerHTML = '';
 
+  // Mis viajes (usuario logueado)
   const misViajes = state.viajes.filter(v =>
     v.conductor_id === session.miembroId ||
     (v.asistentes || []).includes(session.miembroId)
   );
 
-  if (!misViajes.length) {
+  // Todos los grupos (para admin)
+  const todosGroups = buildGroups(state.viajes);
+  const misGroups   = buildGroups(misViajes);
+
+  if (!misViajes.length && session.rol !== 'admin') {
     cont.innerHTML = '<p class="empty-msg">Aún no hay viajes registrados.</p>';
     return;
   }
 
-  // Agrupar por composición real
-  const groups = {};
-  misViajes.forEach(v => {
-    const k = grupoKey(v.conductor_id, v.asistentes);
-    if (!groups[k]) {
-      const miembrosGrupo = [v.conductor_id, ...(v.asistentes || [])]
-        .map(id => state.miembros.find(m => m.id === id))
-        .filter(Boolean)
-        .sort((a, b) => a.nombre.localeCompare(b.nombre));
-      groups[k] = { miembros: miembrosGrupo, trips: [] };
-    }
-    groups[k].trips.push(v);
-  });
-
   let html = '';
   let blockIdx = 0;
 
-  Object.entries(groups).forEach(([key, grupo]) => {
+  // Mis bloques
+  Object.entries(misGroups).forEach(([key, grupo]) => {
     if (state.gruposOcultos.has(key)) return;
     const sep = blockIdx > 0 ? ' cq-block-sep' : '';
-    const label = grupo.miembros.map(m => m.nombre.split(' ')[0]).join(' · ');
-    const btnEliminar = session.rol === 'admin'
-      ? `<button onclick="confirmarOcultarGrupo('${key}','${label.replace(/'/g, "\\'")}')" title="Ocultar este bloque"
-           style="margin-left:auto;background:none;border:none;cursor:pointer;color:#CCC;font-size:14px;padding:2px 6px;border-radius:6px;line-height:1"
-           onmouseover="this.style.color='#C62828';this.style.background='#FFEBEE'"
-           onmouseout="this.style.color='#CCC';this.style.background='none'">
-           <i class="bi bi-trash"></i>
-         </button>`
-      : '';
-    html += `<div class="cq-block${sep}">`;
-    html += `<div class="cq-block-header"><span class="cq-block-dot"></span>${label}${btnEliminar}</div>`;
-    html += `<div class="cuadrante-scroll"><table class="cq-table"><thead><tr><th class="cq-th-name"></th>`;
-    grupo.trips.forEach((v, i) => {
-      const [,m,d] = v.fecha.split('-');
-      html += `<th class="cq-th-trip">${i+1}<span>${d}/${m}</span></th>`;
-    });
-    html += `</tr></thead><tbody>`;
-    grupo.miembros.forEach(miembro => {
-      const count      = grupo.trips.filter(v => v.conductor_id === miembro.id).length;
-      const eliminado  = !!miembro.deleted_at;
-      const nombreCuad = eliminado
-        ? `<span style="text-decoration:line-through;color:#aaa">${miembro.nombre.split(' ')[0]}</span>`
-        : miembro.nombre.split(' ')[0];
-      html += `<tr><td class="cq-td-name">${nombreCuad}${count > 0 ? `<span class="cq-count">(${count})</span>` : ''}</td>`;
-      grupo.trips.forEach(v => {
-        if (v.conductor_id === miembro.id) {
-          const [,m,d] = v.fecha.split('-');
-          html += `<td class="cq-cell hit"><i class="bi bi-check-lg cq-check"></i><span class="cq-date">${d}/${m}</span></td>`;
-        } else {
-          html += `<td class="cq-cell"></td>`;
-        }
-      });
-      html += `</tr>`;
-    });
-    html += `</tbody></table></div></div>`;
+    html += `<div class="cq-block${sep}">${buildGrupoHTML(key, grupo, session.rol === 'admin')}</div>`;
     blockIdx++;
   });
 
-  // Sección de cuadrantes ocultos
-  const ocultos = Object.entries(groups).filter(([key]) => state.gruposOcultos.has(key));
-  if (ocultos.length) {
+  if (blockIdx === 0) html += '<p class="empty-msg">Aún no hay viajes registrados.</p>';
+
+  // Sección admin: cuadrantes de otros miembros
+  if (session.rol === 'admin') {
+    const otrosEntries = Object.entries(todosGroups).filter(
+      ([key]) => !misGroups[key] && !state.gruposOcultos.has(key)
+    );
+    if (otrosEntries.length) {
+      html += `
+        <div style="margin-top:16px;border-top:1px solid #EEF2F7;padding-top:14px;text-align:center">
+          <button onclick="toggleSection('otrosContent','iconOtros')"
+            style="background:none;border:none;cursor:pointer;font-size:13px;color:#888;font-weight:600;display:inline-flex;align-items:center;gap:6px;padding:4px 12px 10px">
+            <i class="bi bi-people" id="iconOtros"></i>
+            Ver cuadrantes de otros miembros (${otrosEntries.length})
+          </button>
+          <div id="otrosContent" style="display:none;text-align:left">`;
+      otrosEntries.forEach(([key, grupo], i) => {
+        const sep = i > 0 ? ' cq-block-sep' : '';
+        html += `<div class="cq-block${sep}">${buildGrupoHTML(key, grupo, true)}</div>`;
+      });
+      html += `</div></div>`;
+    }
+  }
+
+  // Sección cuadrantes eliminados (todos los usuarios)
+  const eliminados = Object.entries(todosGroups).filter(([key]) => state.gruposOcultos.has(key));
+  if (eliminados.length) {
     html += `
       <div style="margin-top:16px;border-top:1px solid #EEF2F7;padding-top:14px;text-align:center">
-        <button onclick="toggleOcultos()" id="btnVerOcultos"
+        <button onclick="toggleSection('eliminadosContent','iconEliminados')"
           style="background:none;border:none;cursor:pointer;font-size:13px;color:#AAA;font-weight:600;display:inline-flex;align-items:center;gap:6px;padding:4px 12px 10px">
-          <i class="bi bi-eye-slash" id="iconOcultos"></i>
-          Ver cuadrantes ocultos (${ocultos.length})
+          <i class="bi bi-eye-slash" id="iconEliminados"></i>
+          Ver cuadrantes eliminados (${eliminados.length})
         </button>
-        <div id="ocultosContent" style="display:none">`;
-
-    ocultos.forEach(([key, grupo]) => {
-      const labelOc = grupo.miembros.map(m => m.nombre.split(' ')[0]).join(' · ');
-      const btnRestaurar = session.rol === 'admin'
-        ? `<button onclick="restaurarGrupo('${key}')" title="Restaurar"
+        <div id="eliminadosContent" style="display:none;text-align:left">`;
+    eliminados.forEach(([key, grupo]) => {
+      const labelEl    = grupo.miembros.map(m => m.nombre.split(' ')[0]).join(' · ');
+      const btnRestaur = session.rol === 'admin'
+        ? `<button onclick="restaurarGrupo('${key}')"
              style="margin-left:auto;background:none;border:none;cursor:pointer;color:#BBB;font-size:13px;padding:2px 6px;border-radius:6px"
              onmouseover="this.style.color='#2E7D32';this.style.background='#E8F5E9'"
              onmouseout="this.style.color='#BBB';this.style.background='none'">
-             <i class="bi bi-eye"></i> Restaurar
-           </button>`
+             <i class="bi bi-eye"></i> Restaurar</button>`
         : '';
-      html += `<div style="opacity:.55;margin-bottom:16px;padding:0 0 4px">`;
-      html += `<div class="cq-block-header" style="color:#BBB"><span class="cq-block-dot" style="background:#CCC"></span>${labelOc}${btnRestaurar}</div>`;
+      html += `<div style="opacity:.55;margin-bottom:16px">`;
+      html += `<div class="cq-block-header" style="color:#BBB"><span class="cq-block-dot" style="background:#CCC"></span>${labelEl}${btnRestaur}</div>`;
       html += `<div class="cuadrante-scroll"><table class="cq-table"><thead><tr><th class="cq-th-name" style="background:#AAA"></th>`;
-      grupo.trips.forEach((v, i) => {
-        const [,mo,d] = v.fecha.split('-');
-        html += `<th class="cq-th-trip">${i+1}<span>${d}/${mo}</span></th>`;
-      });
+      grupo.trips.forEach((v, i) => { const [,mo,d] = v.fecha.split('-'); html += `<th class="cq-th-trip">${i+1}<span>${d}/${mo}</span></th>`; });
       html += `</tr></thead><tbody>`;
       grupo.miembros.forEach(mb => {
         const cnt = grupo.trips.filter(v => v.conductor_id === mb.id).length;
-        const nOc = mb.deleted_at
-          ? `<span style="text-decoration:line-through;color:#aaa">${mb.nombre.split(' ')[0]}</span>`
-          : mb.nombre.split(' ')[0];
-        html += `<tr><td class="cq-td-name">${nOc}${cnt > 0 ? `<span class="cq-count">(${cnt})</span>` : ''}</td>`;
+        const nom = mb.deleted_at ? `<span style="text-decoration:line-through;color:#aaa">${mb.nombre.split(' ')[0]}</span>` : mb.nombre.split(' ')[0];
+        html += `<tr><td class="cq-td-name">${nom}${cnt > 0 ? `<span class="cq-count">(${cnt})</span>` : ''}</td>`;
         grupo.trips.forEach(v => {
-          if (v.conductor_id === mb.id) {
-            const [,mo,d] = v.fecha.split('-');
-            html += `<td class="cq-cell hit"><i class="bi bi-check-lg cq-check"></i><span class="cq-date">${d}/${mo}</span></td>`;
-          } else { html += `<td class="cq-cell"></td>`; }
+          if (v.conductor_id === mb.id) { const [,mo,d] = v.fecha.split('-'); html += `<td class="cq-cell hit"><i class="bi bi-check-lg cq-check"></i><span class="cq-date">${d}/${mo}</span></td>`; }
+          else { html += `<td class="cq-cell"></td>`; }
         });
         html += `</tr>`;
       });
@@ -1133,12 +1156,13 @@ function renderCuadrante() {
   cont.innerHTML = html;
 }
 
-function toggleOcultos() {
-  const content = document.getElementById('ocultosContent');
-  const icon    = document.getElementById('iconOcultos');
+function toggleSection(contentId, iconId) {
+  const content = document.getElementById(contentId);
+  const icon    = document.getElementById(iconId);
+  if (!content) return;
   const visible = content.style.display === 'none';
   content.style.display = visible ? 'block' : 'none';
-  icon.className = visible ? 'bi bi-eye' : 'bi bi-eye-slash';
+  if (icon) icon.className = visible ? 'bi bi-eye' : 'bi bi-eye-slash';
 }
 
 async function restaurarGrupo(key) {
