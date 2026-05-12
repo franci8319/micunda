@@ -1055,9 +1055,9 @@ function renderCuadrante() {
   const ocultos = Object.entries(groups).filter(([key]) => state.gruposOcultos.has(key));
   if (ocultos.length) {
     html += `
-      <div style="margin-top:20px;border-top:1px solid #EEF2F7;padding-top:14px">
+      <div style="margin-top:16px;border-top:1px solid #EEF2F7;padding-top:14px;text-align:center">
         <button onclick="toggleOcultos()" id="btnVerOcultos"
-          style="background:none;border:none;cursor:pointer;font-size:13px;color:#AAA;font-weight:600;display:flex;align-items:center;gap:6px;padding:0 16px 10px">
+          style="background:none;border:none;cursor:pointer;font-size:13px;color:#AAA;font-weight:600;display:inline-flex;align-items:center;gap:6px;padding:4px 12px 10px">
           <i class="bi bi-eye-slash" id="iconOcultos"></i>
           Ver cuadrantes ocultos (${ocultos.length})
         </button>
