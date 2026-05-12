@@ -450,14 +450,45 @@
       <div class="card-title"><i class="bi bi-people-fill"></i> Miembros de la cunda</div>
       <div id="memberList"></div>
     </div>
-    <div style="text-align:center;padding:4px 0 12px">
+    <div style="text-align:center;padding:4px 0 12px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
       <button onclick="openAddMember()"
         style="background:var(--azul);color:#fff;border:none;border-radius:12px;padding:12px 28px;font-size:15px;font-weight:700;cursor:pointer">
         <i class="bi bi-person-plus-fill"></i> Añadir miembro
       </button>
+      <button onclick="openImportViajes()"
+        style="background:var(--verde);color:#fff;border:none;border-radius:12px;padding:12px 28px;font-size:15px;font-weight:700;cursor:pointer">
+        <i class="bi bi-clock-history"></i> Importar viajes anteriores
+      </button>
     </div>
   </div>
 
+</div>
+
+<!-- MODAL: IMPORTAR VIAJES ANTERIORES -->
+<div id="modalImport" class="modal-backdrop modal-center" style="display:none" onclick="closeModal('modalImport',event)">
+  <div class="modal-sheet" onclick="event.stopPropagation()" style="max-height:90dvh;overflow-y:auto">
+    <div class="modal-title"><i class="bi bi-clock-history"></i> Importar viajes anteriores</div>
+    <div id="importContador" style="font-size:13px;color:var(--verde);font-weight:600;margin-bottom:14px;min-height:18px"></div>
+    <div class="form-field">
+      <label class="form-label">Fecha</label>
+      <input type="date" id="importFecha" class="form-input">
+    </div>
+    <div class="form-field">
+      <label class="form-label">Conductor</label>
+      <select id="importConductor" class="form-select"></select>
+    </div>
+    <div class="form-field">
+      <label class="form-label">¿Quién vino?</label>
+      <div id="importAttList"></div>
+    </div>
+    <div id="importError" class="login-error"></div>
+    <div class="modal-btns" style="margin-top:12px">
+      <button class="btn-cancel" onclick="closeModal('modalImport')">Cerrar</button>
+      <button class="btn-confirm" onclick="saveImportViaje()">
+        <i class="bi bi-plus-circle"></i> Guardar y añadir otro
+      </button>
+    </div>
+  </div>
 </div>
 
 <!-- MODAL: CONFIRMAR VIAJE -->
@@ -1314,6 +1345,79 @@ async function confirmarEliminarMiembro() {
     showToast('Error al eliminar el miembro', 'err');
     console.error(err);
     showLoading(false);
+  }
+}
+
+let _importCount = 0;
+
+function openImportViajes() {
+  _importCount = 0;
+  document.getElementById('importContador').textContent = '';
+  document.getElementById('importError').textContent    = '';
+
+  const hoy = new Date();
+  document.getElementById('importFecha').value =
+    `${hoy.getFullYear()}-${String(hoy.getMonth()+1).padStart(2,'0')}-${String(hoy.getDate()).padStart(2,'0')}`;
+
+  const sel = document.getElementById('importConductor');
+  sel.innerHTML = state.miembrosActivos.map(m =>
+    `<option value="${m.id}">${m.nombre}</option>`
+  ).join('');
+
+  const attCont = document.getElementById('importAttList');
+  attCont.innerHTML = '';
+  state.miembrosActivos.forEach(m => {
+    const label = document.createElement('label');
+    label.className = 'att-row';
+    label.innerHTML = `
+      <input type="checkbox" id="iAtt_${m.id}" checked>
+      <span class="att-label">${m.nombre}</span>`;
+    attCont.appendChild(label);
+  });
+
+  document.getElementById('modalImport').style.display = 'flex';
+}
+
+async function saveImportViaje() {
+  const fecha      = document.getElementById('importFecha').value;
+  const conductorId = document.getElementById('importConductor').value;
+  const errEl      = document.getElementById('importError');
+  errEl.textContent = '';
+
+  if (!fecha) { errEl.textContent = 'Selecciona una fecha'; return; }
+
+  const asistentes = state.miembrosActivos
+    .filter(m => document.getElementById(`iAtt_${m.id}`)?.checked && m.id !== conductorId)
+    .map(m => m.id);
+
+  try {
+    const { error } = await db.from('viajes').insert({
+      cunda_id:     session.cundaId,
+      fecha,
+      conductor_id: conductorId,
+      asistentes,
+      created_by:   session.miembroId
+    });
+    if (error) throw error;
+
+    _importCount++;
+    const conductor = state.miembrosActivos.find(m => m.id === conductorId);
+    const [y, mo, d] = fecha.split('-');
+    document.getElementById('importContador').textContent =
+      `✓ ${_importCount} viaje${_importCount > 1 ? 's' : ''} importado${_importCount > 1 ? 's' : ''} · Último: ${conductor?.nombre} el ${d}/${mo}/${y}`;
+
+    // Resetear fecha un día antes para facilitar entrada secuencial
+    const dt = new Date(fecha + 'T12:00:00');
+    dt.setDate(dt.getDate() - 1);
+    document.getElementById('importFecha').value =
+      `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
+
+    await loadAll();
+    renderCuadrante();
+    renderHistorial();
+  } catch (err) {
+    errEl.textContent = 'Error al guardar el viaje';
+    console.error(err);
   }
 }
 
