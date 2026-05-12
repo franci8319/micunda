@@ -337,9 +337,9 @@
         <input type="text" id="loginCunda" class="login-input" placeholder="Ej: Cunda del trabajo">
       </div>
       <div class="login-field">
-        <label class="login-label">Usuario</label>
-        <input type="text" id="loginUsuario" class="login-input" placeholder="Tu usuario"
-               autocomplete="username">
+        <label class="login-label">Email</label>
+        <input type="email" id="loginEmail" class="login-input" placeholder="tu@email.com"
+               autocomplete="email">
       </div>
       <div class="login-field">
         <label class="login-label">Contraseña</label>
@@ -358,13 +358,13 @@
         <input type="text" id="crearNombreCunda" class="login-input" placeholder="Ej: Cunda del trabajo">
       </div>
       <div class="login-field">
-        <label class="login-label">Tu nombre</label>
-        <input type="text" id="crearNombre" class="login-input" placeholder="Tu nombre completo">
+        <label class="login-label">Tu nombre <small style="color:#999;font-weight:400">(como aparecerá en el cuadrante)</small></label>
+        <input type="text" id="crearNombre" class="login-input" placeholder="Ej: Francis">
       </div>
       <div class="login-field">
-        <label class="login-label">Usuario</label>
-        <input type="text" id="crearUsuario" class="login-input" placeholder="Ej: francis"
-               autocomplete="username">
+        <label class="login-label">Email</label>
+        <input type="email" id="crearEmail" class="login-input" placeholder="tu@email.com"
+               autocomplete="email">
       </div>
       <div class="login-field">
         <label class="login-label">Contraseña</label>
@@ -516,12 +516,12 @@
   <div class="modal-sheet" onclick="event.stopPropagation()" style="max-height:90dvh;overflow-y:auto">
     <div class="modal-title"><i class="bi bi-person-plus-fill"></i> Añadir miembro</div>
     <div class="form-field">
-      <label class="form-label">Nombre</label>
-      <input type="text" id="nuevoNombre" class="form-input" placeholder="Nombre completo">
+      <label class="form-label">Nombre <small style="color:#999;font-weight:400">(como aparecerá en el cuadrante)</small></label>
+      <input type="text" id="nuevoNombre" class="form-input" placeholder="Ej: María">
     </div>
     <div class="form-field">
-      <label class="form-label">Usuario</label>
-      <input type="text" id="nuevoUsuario" class="form-input" placeholder="Ej: maria">
+      <label class="form-label">Email</label>
+      <input type="email" id="nuevoEmail" class="form-input" placeholder="su@email.com">
     </div>
     <div class="form-field">
       <label class="form-label">Contraseña</label>
@@ -575,13 +575,17 @@ function switchLoginTab(tab) {
 
 async function doLogin() {
   const nombreCunda = document.getElementById('loginCunda').value.trim();
-  const usuario     = document.getElementById('loginUsuario').value.trim();
+  const email       = document.getElementById('loginEmail').value.trim().toLowerCase();
   const password    = document.getElementById('loginPassword').value;
   const errEl       = document.getElementById('loginError');
   errEl.textContent = '';
 
-  if (!nombreCunda || !usuario || !password) {
+  if (!nombreCunda || !email || !password) {
     errEl.textContent = 'Rellena todos los campos';
+    return;
+  }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    errEl.textContent = 'El email no es válido';
     return;
   }
 
@@ -603,7 +607,7 @@ async function doLogin() {
     // Verificar credenciales
     const { data: miembro } = await db.rpc('login', {
       p_cunda_id: cunda.id,
-      p_usuario:  usuario,
+      p_email:    email,
       p_password: password
     });
 
@@ -633,13 +637,17 @@ async function doLogin() {
 async function doCrearCunda() {
   const nombreCunda = document.getElementById('crearNombreCunda').value.trim();
   const nombre      = document.getElementById('crearNombre').value.trim();
-  const usuario     = document.getElementById('crearUsuario').value.trim();
+  const email       = document.getElementById('crearEmail').value.trim().toLowerCase();
   const password    = document.getElementById('crearPassword').value;
   const errEl       = document.getElementById('crearError');
   errEl.textContent = '';
 
-  if (!nombreCunda || !nombre || !usuario || !password) {
+  if (!nombreCunda || !nombre || !email || !password) {
     errEl.textContent = 'Rellena todos los campos';
+    return;
+  }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    errEl.textContent = 'El email no es válido';
     return;
   }
   if (password.length < 4) {
@@ -652,7 +660,7 @@ async function doCrearCunda() {
     const { data: cundaId, error } = await db.rpc('crear_cunda', {
       p_nombre_cunda:   nombreCunda,
       p_nombre_admin:   nombre,
-      p_usuario_admin:  usuario,
+      p_email_admin:    email,
       p_password_admin: password
     });
 
@@ -661,7 +669,7 @@ async function doCrearCunda() {
     // Login automático
     const { data: miembro } = await db.rpc('login', {
       p_cunda_id: cundaId,
-      p_usuario:  usuario,
+      p_email:    email,
       p_password: password
     });
 
@@ -724,7 +732,7 @@ async function iniciarApp() {
 async function loadAll() {
   const [{ data: miembros }, { data: viajes }] = await Promise.all([
     db.from('miembros')
-      .select('id, nombre, rol, incorporado_at, usuario')
+      .select('id, nombre, rol, incorporado_at, email')
       .eq('cunda_id', session.cundaId)
       .order('incorporado_at', { ascending: true }),
     db.from('viajes')
@@ -1124,7 +1132,7 @@ function renderAdmin() {
       <div class="member-avatar">${inicial}</div>
       <div style="flex:1;min-width:0">
         <div class="member-name">${m.nombre}</div>
-        <div class="member-user">@${m.usuario}</div>
+        <div class="member-user">${m.email}</div>
         <div class="incorp-date">Desde ${isoToDisplay(m.incorporado_at)}</div>
       </div>
       <span class="role-badge ${m.rol}">${m.rol === 'admin' ? 'Admin' : 'Editor'}</span>
@@ -1138,7 +1146,7 @@ function openAddMember() {
   document.getElementById('nuevoIncorporado').value =
     `${hoy.getFullYear()}-${String(hoy.getMonth()+1).padStart(2,'0')}-${String(hoy.getDate()).padStart(2,'0')}`;
   document.getElementById('nuevoNombre').value   = '';
-  document.getElementById('nuevoUsuario').value  = '';
+  document.getElementById('nuevoEmail').value    = '';
   document.getElementById('nuevoPassword').value = '';
   document.getElementById('nuevoRol').value      = 'editor';
   document.getElementById('miembroError').textContent = '';
@@ -1147,15 +1155,28 @@ function openAddMember() {
 
 async function saveNuevoMiembro() {
   const nombre      = document.getElementById('nuevoNombre').value.trim();
-  const usuario     = document.getElementById('nuevoUsuario').value.trim();
+  const email       = document.getElementById('nuevoEmail').value.trim().toLowerCase();
   const password    = document.getElementById('nuevoPassword').value;
   const rol         = document.getElementById('nuevoRol').value;
   const incorporado = document.getElementById('nuevoIncorporado').value;
   const errEl       = document.getElementById('miembroError');
   errEl.textContent = '';
 
-  if (!nombre || !usuario || !password || !incorporado) {
+  if (!nombre || !email || !password || !incorporado) {
     errEl.textContent = 'Rellena todos los campos';
+    return;
+  }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    errEl.textContent = 'El email no es válido';
+    return;
+  }
+
+  // Nombre único en esta cunda
+  const nombreDuplicado = state.miembros.some(
+    m => m.nombre.toLowerCase() === nombre.toLowerCase()
+  );
+  if (nombreDuplicado) {
+    errEl.textContent = `Ya hay un "${nombre}" en esta cunda. Usa un nombre diferente.`;
     return;
   }
 
@@ -1165,7 +1186,7 @@ async function saveNuevoMiembro() {
     const { error } = await db.rpc('añadir_miembro', {
       p_cunda_id:       session.cundaId,
       p_nombre:         nombre,
-      p_usuario:        usuario,
+      p_email:          email,
       p_password:       password,
       p_rol:            rol,
       p_incorporado_at: incorporado,
