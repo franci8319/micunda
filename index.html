@@ -545,8 +545,8 @@
 <!-- MODAL: OCULTAR BLOQUE CUADRANTE -->
 <div id="modalOcultarGrupo" class="modal-backdrop" style="display:none" onclick="closeModal('modalOcultarGrupo',event)">
   <div class="modal-sheet" onclick="event.stopPropagation()">
-    <div class="modal-title">Ocultar bloque</div>
-    <div class="modal-text">¿Ocultar el bloque <strong id="modalOcultarLabel"></strong>? Desaparecerá del cuadrante para todos los miembros.</div>
+    <div class="modal-title">Ocultar cuadrante</div>
+    <div class="modal-text">¿Ocultar el cuadrante <strong id="modalOcultarLabel"></strong>? Desaparecerá de la vista principal pero todos podrán verlo en "Ver cuadrantes ocultos".</div>
     <div class="modal-btns">
       <button class="btn-cancel" onclick="closeModal('modalOcultarGrupo')">Cancelar</button>
       <button class="btn-danger" onclick="ocultarGrupo()">Ocultar</button>
@@ -1051,7 +1051,75 @@ function renderCuadrante() {
     blockIdx++;
   });
 
+  // Sección de cuadrantes ocultos
+  const ocultos = Object.entries(groups).filter(([key]) => state.gruposOcultos.has(key));
+  if (ocultos.length) {
+    html += `
+      <div style="margin-top:20px;border-top:1px solid #EEF2F7;padding-top:14px">
+        <button onclick="toggleOcultos()" id="btnVerOcultos"
+          style="background:none;border:none;cursor:pointer;font-size:13px;color:#AAA;font-weight:600;display:flex;align-items:center;gap:6px;padding:0 16px 10px">
+          <i class="bi bi-eye-slash" id="iconOcultos"></i>
+          Ver cuadrantes ocultos (${ocultos.length})
+        </button>
+        <div id="ocultosContent" style="display:none">`;
+
+    ocultos.forEach(([key, grupo]) => {
+      const labelOc = grupo.miembros.map(m => m.nombre.split(' ')[0]).join(' · ');
+      const btnRestaurar = session.rol === 'admin'
+        ? `<button onclick="restaurarGrupo('${key}')" title="Restaurar"
+             style="margin-left:auto;background:none;border:none;cursor:pointer;color:#BBB;font-size:13px;padding:2px 6px;border-radius:6px"
+             onmouseover="this.style.color='#2E7D32';this.style.background='#E8F5E9'"
+             onmouseout="this.style.color='#BBB';this.style.background='none'">
+             <i class="bi bi-eye"></i> Restaurar
+           </button>`
+        : '';
+      html += `<div style="opacity:.55;margin-bottom:16px;padding:0 0 4px">`;
+      html += `<div class="cq-block-header" style="color:#BBB"><span class="cq-block-dot" style="background:#CCC"></span>${labelOc}${btnRestaurar}</div>`;
+      html += `<div class="cuadrante-scroll"><table class="cq-table"><thead><tr><th class="cq-th-name" style="background:#AAA"></th>`;
+      grupo.trips.forEach((v, i) => {
+        const [,mo,d] = v.fecha.split('-');
+        html += `<th class="cq-th-trip">${i+1}<span>${d}/${mo}</span></th>`;
+      });
+      html += `</tr></thead><tbody>`;
+      grupo.miembros.forEach(mb => {
+        const cnt = grupo.trips.filter(v => v.conductor_id === mb.id).length;
+        const nOc = mb.deleted_at
+          ? `<span style="text-decoration:line-through;color:#aaa">${mb.nombre.split(' ')[0]}</span>`
+          : mb.nombre.split(' ')[0];
+        html += `<tr><td class="cq-td-name">${nOc}${cnt > 0 ? `<span class="cq-count">(${cnt})</span>` : ''}</td>`;
+        grupo.trips.forEach(v => {
+          if (v.conductor_id === mb.id) {
+            const [,mo,d] = v.fecha.split('-');
+            html += `<td class="cq-cell hit"><i class="bi bi-check-lg cq-check"></i><span class="cq-date">${d}/${mo}</span></td>`;
+          } else { html += `<td class="cq-cell"></td>`; }
+        });
+        html += `</tr>`;
+      });
+      html += `</tbody></table></div></div>`;
+    });
+    html += `</div></div>`;
+  }
+
   cont.innerHTML = html;
+}
+
+function toggleOcultos() {
+  const content = document.getElementById('ocultosContent');
+  const icon    = document.getElementById('iconOcultos');
+  const visible = content.style.display === 'none';
+  content.style.display = visible ? 'block' : 'none';
+  icon.className = visible ? 'bi bi-eye' : 'bi bi-eye-slash';
+}
+
+async function restaurarGrupo(key) {
+  const { error } = await db.from('grupos_ocultos')
+    .delete()
+    .eq('cunda_id', session.cundaId)
+    .eq('grupo_key', key);
+  if (error) { showToast('Error al restaurar', 'err'); return; }
+  state.gruposOcultos.delete(key);
+  renderCuadrante();
+  showToast('Cuadrante restaurado', 'ok');
 }
 
 let _ocultarGrupoKey = null;
