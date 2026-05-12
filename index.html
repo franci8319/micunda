@@ -660,11 +660,6 @@
   <div id="toastMsg" class="toast-msg"></div>
 </div>
 
-<!-- TOAST BIENVENIDA -->
-<div style="position:fixed;top:80px;left:50%;transform:translateX(-50%);z-index:9999;pointer-events:none;width:90%;max-width:360px">
-  <div id="welcomeToast" class="toast-msg"
-       style="background:linear-gradient(135deg,#1565C0,#0D47A1);border-radius:16px;padding:14px 20px;font-size:15px;font-weight:600;text-align:center;white-space:normal;box-shadow:0 6px 20px rgba(21,101,192,.4)"></div>
-</div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -828,36 +823,11 @@ async function iniciarApp() {
     renderCuadrante();
     renderHistorial();
     if (session.rol === 'admin') renderAdmin();
-    checkNuevosIntegrantes();
   } finally {
     showLoading(false);
   }
 }
 
-function checkNuevosIntegrantes() {
-  const key    = `mcVistos_${session.miembroId}`;
-  const vistos = JSON.parse(localStorage.getItem(key) || '[]');
-
-  const nuevos = state.miembrosActivos.filter(m =>
-    m.id !== session.miembroId && !vistos.includes(m.id)
-  );
-
-  if (!nuevos.length) return;
-
-  const todosVistos = [...vistos, ...nuevos.map(m => m.id)];
-  localStorage.setItem(key, JSON.stringify(todosVistos));
-
-  nuevos.forEach((m, i) => {
-    setTimeout(() => mostrarBienvenida(m.nombre), i * 4200);
-  });
-}
-
-function mostrarBienvenida(nombre) {
-  const el = document.getElementById('welcomeToast');
-  el.textContent = `👋 ¡${nombre} es nuevo integrante de la cunda!`;
-  el.classList.add('show');
-  setTimeout(() => el.classList.remove('show'), 3500);
-}
 
 // ════════════════════════════════════
 //  DATOS
