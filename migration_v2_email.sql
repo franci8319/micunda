@@ -13,6 +13,9 @@ CREATE UNIQUE INDEX idx_miembros_nombre_unique
   ON miembros(cunda_id, LOWER(nombre));
 
 -- 4. Actualizar función login
+DROP FUNCTION IF EXISTS login(uuid,text,text);
+DROP FUNCTION IF EXISTS crear_cunda(text,text,text,text);
+DROP FUNCTION IF EXISTS añadir_miembro(uuid,text,text,text,text,date,uuid);
 CREATE OR REPLACE FUNCTION login(
   p_cunda_id uuid,
   p_email    text,

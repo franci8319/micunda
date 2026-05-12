@@ -411,17 +411,16 @@
 
   <!-- TAB: REGISTRO -->
   <div id="tabRegistro" class="tab-panel active">
-    <div id="suggCard" class="suggestion-card" style="display:none">
-      <div class="suggestion-label"><i class="bi bi-lightbulb-fill"></i> Sugerencia de hoy</div>
-      <div id="suggName" class="suggestion-name">—</div>
-      <div class="suggestion-sub">Tiene menos viajes acumulados en este grupo</div>
-    </div>
     <div class="card">
-      <div class="card-title"><i class="bi bi-people-fill"></i> ¿Quién viene hoy?</div>
+      <div class="card-title" style="font-size:15px;color:var(--azul);text-transform:none;letter-spacing:0">
+        <i class="bi bi-people-fill"></i> ¿Quién viene hoy?
+      </div>
       <div id="attList"></div>
     </div>
     <div class="card">
-      <div class="card-title"><i class="bi bi-hand-index-thumb-fill"></i> Registrar viaje</div>
+      <div class="card-title" style="font-size:15px;color:var(--azul);text-transform:none;letter-spacing:0">
+        <i class="bi bi-steering2"></i> ¿Quién conduce hoy?
+      </div>
       <div id="driverGrid" class="driver-grid"></div>
     </div>
   </div>
@@ -943,14 +942,9 @@ function updateSuggestion(key, counts) {
   });
 
   const presentes = state.miembrosActivos.filter(m => state.attendance[m.id]);
-  if (presentes.length < 2) {
-    document.getElementById('suggCard').style.display = 'none';
-    return;
-  }
+  if (presentes.length < 2) return;
 
   const sugerido = [...presentes].sort((a, b) => (counts[a.id] || 0) - (counts[b.id] || 0))[0];
-  document.getElementById('suggCard').style.display = 'block';
-  document.getElementById('suggName').textContent   = sugerido.nombre.split(' ')[0].toUpperCase();
   const btn = document.getElementById(`dBtn_${sugerido.id}`);
   if (btn && !btn.disabled) btn.classList.add('suggested');
 }
@@ -1403,7 +1397,28 @@ function openImportViajes() {
     attCont.appendChild(label);
   });
 
+  // Bloquear el checkbox del conductor al cambiar el select
+  sel.onchange = () => syncImportConductorCheck(sel.value);
+  syncImportConductorCheck(sel.value);
+
   document.getElementById('modalImport').style.display = 'flex';
+}
+
+function syncImportConductorCheck(conductorId) {
+  state.miembrosActivos.forEach(m => {
+    const cb = document.getElementById(`iAtt_${m.id}`);
+    if (!cb) return;
+    if (m.id === conductorId) {
+      cb.checked  = true;
+      cb.disabled = true;
+      cb.parentElement.style.opacity = '.6';
+      cb.parentElement.style.cursor  = 'not-allowed';
+    } else {
+      cb.disabled = false;
+      cb.parentElement.style.opacity = '1';
+      cb.parentElement.style.cursor  = 'pointer';
+    }
+  });
 }
 
 async function saveImportViaje() {
