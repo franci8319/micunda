@@ -1407,17 +1407,25 @@ function openImportViajes() {
 
 function syncImportConductorCheck(conductorId) {
   state.miembrosActivos.forEach(m => {
-    const cb = document.getElementById(`iAtt_${m.id}`);
-    if (!cb) return;
+    const cb    = document.getElementById(`iAtt_${m.id}`);
+    const label = cb?.parentElement;
+    if (!cb || !label) return;
+    const existing = label.querySelector('.cond-badge');
+    if (existing) existing.remove();
     if (m.id === conductorId) {
       cb.checked  = true;
       cb.disabled = true;
-      cb.parentElement.style.opacity = '.6';
-      cb.parentElement.style.cursor  = 'not-allowed';
+      label.style.opacity = '1';
+      label.style.cursor  = 'default';
+      const badge = document.createElement('span');
+      badge.className = 'cond-badge';
+      badge.textContent = '(conductor)';
+      badge.style.cssText = 'color:#1a4a8a;font-size:11px;margin-left:6px;font-weight:600';
+      label.appendChild(badge);
     } else {
       cb.disabled = false;
-      cb.parentElement.style.opacity = '1';
-      cb.parentElement.style.cursor  = 'pointer';
+      label.style.opacity = '1';
+      label.style.cursor  = 'pointer';
     }
   });
 }
