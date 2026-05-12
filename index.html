@@ -542,6 +542,18 @@
   </div>
 </div>
 
+<!-- MODAL: ELIMINAR MIEMBRO -->
+<div id="modalEliminarMiembro" class="modal-backdrop" style="display:none" onclick="closeModal('modalEliminarMiembro',event)">
+  <div class="modal-sheet" onclick="event.stopPropagation()">
+    <div class="modal-title">Eliminar miembro</div>
+    <div class="modal-text">¿Eliminar a <strong id="modalEliminarNombre"></strong> de la cunda? Sus viajes anteriores se conservarán en el historial.</div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal('modalEliminarMiembro')">Cancelar</button>
+      <button class="btn-danger" onclick="confirmarEliminarMiembro()">Eliminar</button>
+    </div>
+  </div>
+</div>
+
 <!-- TOAST -->
 <div class="toast-wrap">
   <div id="toastMsg" class="toast-msg"></div>
@@ -562,7 +574,8 @@ const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 // ── Sesión y estado ──
 let session = null; // { miembroId, nombre, rol, cundaId, cundaNombre, incorporadoAt }
 let state   = { miembros: [], viajes: [], attendance: {} };
-let _editingViajeId = null;
+let _editingViajeId    = null;
+let _eliminarMiembroId = null;
 
 // ════════════════════════════════════
 //  AUTH
@@ -752,6 +765,7 @@ async function loadAll() {
     db.from('miembros')
       .select('id, nombre, rol, incorporado_at, email')
       .eq('cunda_id', session.cundaId)
+      .is('deleted_at', null)
       .order('incorporado_at', { ascending: true }),
     db.from('viajes')
       .select('*')
@@ -1155,9 +1169,36 @@ function renderAdmin() {
         <div class="incorp-date">Desde ${isoToDisplay(m.incorporado_at)}</div>
       </div>
       <span class="role-badge ${m.rol}">${m.rol === 'admin' ? 'Admin' : 'Editor'}</span>
+      ${m.id !== session.miembroId ? `
+      <button class="action-btn del" onclick="openEliminarMiembro('${m.id}','${m.nombre}')" title="Eliminar">
+        <i class="bi bi-person-x-fill"></i>
+      </button>` : ''}
     `;
     cont.appendChild(row);
   });
+}
+
+function openEliminarMiembro(id, nombre) {
+  _eliminarMiembroId = id;
+  document.getElementById('modalEliminarNombre').textContent = nombre;
+  document.getElementById('modalEliminarMiembro').style.display = 'flex';
+}
+
+async function confirmarEliminarMiembro() {
+  closeModal('modalEliminarMiembro');
+  showLoading(true);
+  try {
+    const { error } = await db.from('miembros')
+      .update({ deleted_at: new Date().toISOString() })
+      .eq('id', _eliminarMiembroId);
+    if (error) throw error;
+    showToast('Miembro eliminado de la cunda', 'ok');
+    await reloadAll();
+  } catch (err) {
+    showToast('Error al eliminar el miembro', 'err');
+    console.error(err);
+    showLoading(false);
+  }
 }
 
 function openAddMember() {
