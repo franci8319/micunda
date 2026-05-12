@@ -1,0 +1,21 @@
+name: Weekly miCunda Report
+
+on:
+  schedule:
+    - cron: '0 16 * * 0'  # Domingos 17:00 CET (16:00 UTC)
+  workflow_dispatch:       # Permite lanzarlo manualmente para probar
+
+jobs:
+  send-report:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Enviar resumen semanal
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          RESEND_KEY:   ${{ secrets.RESEND_KEY }}
+        run: node scripts/weekly-email.js
