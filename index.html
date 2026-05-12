@@ -542,6 +542,18 @@
   </div>
 </div>
 
+<!-- MODAL: OCULTAR BLOQUE CUADRANTE -->
+<div id="modalOcultarGrupo" class="modal-backdrop" style="display:none" onclick="closeModal('modalOcultarGrupo',event)">
+  <div class="modal-sheet" onclick="event.stopPropagation()">
+    <div class="modal-title">Ocultar bloque</div>
+    <div class="modal-text">¿Ocultar el bloque <strong id="modalOcultarLabel"></strong>? Desaparecerá del cuadrante para todos los miembros.</div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal('modalOcultarGrupo')">Cancelar</button>
+      <button class="btn-danger" onclick="ocultarGrupo()">Ocultar</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL: ELIMINAR MIEMBRO -->
 <div id="modalEliminarMiembro" class="modal-backdrop" style="display:none" onclick="closeModal('modalEliminarMiembro',event)">
   <div class="modal-sheet" onclick="event.stopPropagation()">
@@ -1003,7 +1015,7 @@ function renderCuadrante() {
     const sep = blockIdx > 0 ? ' cq-block-sep' : '';
     const label = grupo.miembros.map(m => m.nombre.split(' ')[0]).join(' · ');
     const btnEliminar = session.rol === 'admin'
-      ? `<button onclick="ocultarGrupo('${key}')" title="Ocultar este bloque"
+      ? `<button onclick="confirmarOcultarGrupo('${key}','${label.replace(/'/g, "\\'")}')" title="Ocultar este bloque"
            style="margin-left:auto;background:none;border:none;cursor:pointer;color:#CCC;font-size:14px;padding:2px 6px;border-radius:6px;line-height:1"
            onmouseover="this.style.color='#C62828';this.style.background='#FFEBEE'"
            onmouseout="this.style.color='#CCC';this.style.background='none'">
@@ -1042,13 +1054,22 @@ function renderCuadrante() {
   cont.innerHTML = html;
 }
 
-async function ocultarGrupo(key) {
+let _ocultarGrupoKey = null;
+
+function confirmarOcultarGrupo(key, label) {
+  _ocultarGrupoKey = key;
+  document.getElementById('modalOcultarLabel').textContent = label;
+  document.getElementById('modalOcultarGrupo').style.display = 'flex';
+}
+
+async function ocultarGrupo() {
+  closeModal('modalOcultarGrupo');
   const { error } = await db.from('grupos_ocultos').insert({
     cunda_id:  session.cundaId,
-    grupo_key: key
+    grupo_key: _ocultarGrupoKey
   });
   if (error) { showToast('Error al ocultar el bloque', 'err'); return; }
-  state.gruposOcultos.add(key);
+  state.gruposOcultos.add(_ocultarGrupoKey);
   renderCuadrante();
   showToast('Bloque ocultado', 'ok');
 }
