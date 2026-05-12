@@ -761,7 +761,7 @@ function mostrarBienvenida(nombre) {
 //  DATOS
 // ════════════════════════════════════
 async function loadAll() {
-  const [{ data: miembros }, { data: viajes }] = await Promise.all([
+  const [{ data: miembros }, { data: viajes }, { data: ocultos }] = await Promise.all([
     db.from('miembros')
       .select('id, nombre, rol, incorporado_at, email, deleted_at')
       .eq('cunda_id', session.cundaId)
@@ -771,12 +771,16 @@ async function loadAll() {
       .eq('cunda_id', session.cundaId)
       .is('deleted_at', null)
       .order('fecha', { ascending: true })
-      .order('created_at', { ascending: true })
+      .order('created_at', { ascending: true }),
+    db.from('grupos_ocultos')
+      .select('grupo_key')
+      .eq('cunda_id', session.cundaId)
   ]);
 
   state.miembros        = miembros || [];
   state.miembrosActivos = (miembros || []).filter(m => !m.deleted_at);
   state.viajes          = (viajes || []).filter(v => v.fecha >= session.incorporadoAt);
+  state.gruposOcultos   = new Set((ocultos || []).map(o => o.grupo_key));
 }
 
 async function reloadAll() {
@@ -994,11 +998,20 @@ function renderCuadrante() {
   let html = '';
   let blockIdx = 0;
 
-  Object.values(groups).forEach(grupo => {
+  Object.entries(groups).forEach(([key, grupo]) => {
+    if (state.gruposOcultos.has(key)) return;
     const sep = blockIdx > 0 ? ' cq-block-sep' : '';
     const label = grupo.miembros.map(m => m.nombre.split(' ')[0]).join(' · ');
+    const btnEliminar = session.rol === 'admin'
+      ? `<button onclick="ocultarGrupo('${key}')" title="Ocultar este bloque"
+           style="margin-left:auto;background:none;border:none;cursor:pointer;color:#CCC;font-size:14px;padding:2px 6px;border-radius:6px;line-height:1"
+           onmouseover="this.style.color='#C62828';this.style.background='#FFEBEE'"
+           onmouseout="this.style.color='#CCC';this.style.background='none'">
+           <i class="bi bi-trash"></i>
+         </button>`
+      : '';
     html += `<div class="cq-block${sep}">`;
-    html += `<div class="cq-block-header"><span class="cq-block-dot"></span>${label}</div>`;
+    html += `<div class="cq-block-header"><span class="cq-block-dot"></span>${label}${btnEliminar}</div>`;
     html += `<div class="cuadrante-scroll"><table class="cq-table"><thead><tr><th class="cq-th-name"></th>`;
     grupo.trips.forEach((v, i) => {
       const [,m,d] = v.fecha.split('-');
@@ -1027,6 +1040,17 @@ function renderCuadrante() {
   });
 
   cont.innerHTML = html;
+}
+
+async function ocultarGrupo(key) {
+  const { error } = await db.from('grupos_ocultos').insert({
+    cunda_id:  session.cundaId,
+    grupo_key: key
+  });
+  if (error) { showToast('Error al ocultar el bloque', 'err'); return; }
+  state.gruposOcultos.add(key);
+  renderCuadrante();
+  showToast('Bloque ocultado', 'ok');
 }
 
 // ════════════════════════════════════
@@ -1234,12 +1258,21 @@ async function saveNuevoMiembro() {
     return;
   }
 
-  // Nombre único en esta cunda
-  const nombreDuplicado = state.miembros.some(
+  // Nombre igual a un miembro activo → bloquear
+  const activoDuplicado = state.miembrosActivos.some(
     m => m.nombre.toLowerCase() === nombre.toLowerCase()
   );
-  if (nombreDuplicado) {
-    errEl.textContent = `Ya hay un "${nombre}" en esta cunda. Usa un nombre diferente.`;
+  if (activoDuplicado) {
+    errEl.textContent = `Ya hay un "${nombre}" activo en esta cunda. Usa un nombre diferente.`;
+    return;
+  }
+
+  // Nombre igual a un miembro eliminado → avisar
+  const eliminadoDuplicado = state.miembros.some(
+    m => m.deleted_at && m.nombre.toLowerCase() === nombre.toLowerCase()
+  );
+  if (eliminadoDuplicado) {
+    errEl.textContent = `El nombre "${nombre}" ya fue usado por un miembro anterior. Para evitar confusiones en el historial y el cuadrante, usa un nombre diferente (ej: "${nombre}2").`;
     return;
   }
 
