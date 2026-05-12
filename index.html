@@ -736,7 +736,7 @@ function checkNuevosIntegrantes() {
   const key    = `mcVistos_${session.miembroId}`;
   const vistos = JSON.parse(localStorage.getItem(key) || '[]');
 
-  const nuevos = state.miembros.filter(m =>
+  const nuevos = state.miembrosActivos.filter(m =>
     m.id !== session.miembroId && !vistos.includes(m.id)
   );
 
@@ -763,9 +763,8 @@ function mostrarBienvenida(nombre) {
 async function loadAll() {
   const [{ data: miembros }, { data: viajes }] = await Promise.all([
     db.from('miembros')
-      .select('id, nombre, rol, incorporado_at, email')
+      .select('id, nombre, rol, incorporado_at, email, deleted_at')
       .eq('cunda_id', session.cundaId)
-      .is('deleted_at', null)
       .order('incorporado_at', { ascending: true }),
     db.from('viajes')
       .select('*')
@@ -775,9 +774,9 @@ async function loadAll() {
       .order('created_at', { ascending: true })
   ]);
 
-  state.miembros = miembros || [];
-  // Filtrar viajes desde la fecha de incorporación del usuario actual
-  state.viajes   = (viajes || []).filter(v => v.fecha >= session.incorporadoAt);
+  state.miembros        = miembros || [];
+  state.miembrosActivos = (miembros || []).filter(m => !m.deleted_at);
+  state.viajes          = (viajes || []).filter(v => v.fecha >= session.incorporadoAt);
 }
 
 async function reloadAll() {
@@ -813,7 +812,7 @@ function grupoKey(conductorId, asistentes) {
 }
 
 function grupoKeyActual() {
-  return [...state.miembros]
+  return [...state.miembrosActivos]
     .filter(m => state.attendance[m.id])
     .map(m => m.id)
     .sort()
@@ -832,7 +831,7 @@ function renderRegistro() {
 function renderAttendance() {
   const cont = document.getElementById('attList');
   cont.innerHTML = '';
-  state.miembros.forEach(m => {
+  state.miembrosActivos.forEach(m => {
     // Por defecto todos marcados como presentes
     if (state.attendance[m.id] === undefined) state.attendance[m.id] = true;
     const row = document.createElement('label');
@@ -856,7 +855,7 @@ function onAttChange(id, presente) {
 function renderDriverButtons() {
   const grid = document.getElementById('driverGrid');
   grid.innerHTML = '';
-  state.miembros.forEach(m => {
+  state.miembrosActivos.forEach(m => {
     const col = document.createElement('div');
     col.innerHTML = `
       <button id="dBtn_${m.id}" class="driver-btn" ${!state.attendance[m.id] ? 'disabled' : ''}
@@ -872,14 +871,14 @@ function renderDriverButtons() {
 function updateDriverCruces() {
   const key = grupoKeyActual();
   const counts = {};
-  state.miembros.forEach(m => { counts[m.id] = 0; });
+  state.miembrosActivos.forEach(m => { counts[m.id] = 0; });
 
   state.viajes.forEach(v => {
     const k = grupoKey(v.conductor_id, v.asistentes);
     if (k === key && counts.hasOwnProperty(v.conductor_id)) counts[v.conductor_id]++;
   });
 
-  state.miembros.forEach(m => {
+  state.miembrosActivos.forEach(m => {
     const el = document.getElementById(`cru_${m.id}`);
     if (el) {
       const c = counts[m.id];
@@ -896,7 +895,7 @@ function updateSuggestion(key, counts) {
     if (b) b.classList.remove('suggested');
   });
 
-  const presentes = state.miembros.filter(m => state.attendance[m.id]);
+  const presentes = state.miembrosActivos.filter(m => state.attendance[m.id]);
   if (presentes.length < 2) {
     document.getElementById('suggCard').style.display = 'none';
     return;
@@ -935,7 +934,7 @@ function onDriverClick(conductorId) {
 
 async function registrarViaje(conductorId) {
   showLoading(true);
-  const asistenteIds = state.miembros
+  const asistenteIds = state.miembrosActivos
     .filter(m => state.attendance[m.id] && m.id !== conductorId)
     .map(m => m.id);
 
@@ -1007,8 +1006,12 @@ function renderCuadrante() {
     });
     html += `</tr></thead><tbody>`;
     grupo.miembros.forEach(miembro => {
-      const count = grupo.trips.filter(v => v.conductor_id === miembro.id).length;
-      html += `<tr><td class="cq-td-name">${miembro.nombre.split(' ')[0]}${count > 0 ? `<span class="cq-count">(${count})</span>` : ''}</td>`;
+      const count      = grupo.trips.filter(v => v.conductor_id === miembro.id).length;
+      const eliminado  = !!miembro.deleted_at;
+      const nombreCuad = eliminado
+        ? `<span style="text-decoration:line-through;color:#aaa">${miembro.nombre.split(' ')[0]}</span>`
+        : miembro.nombre.split(' ')[0];
+      html += `<tr><td class="cq-td-name">${nombreCuad}${count > 0 ? `<span class="cq-count">(${count})</span>` : ''}</td>`;
       grupo.trips.forEach(v => {
         if (v.conductor_id === miembro.id) {
           const [,m,d] = v.fecha.split('-');
@@ -1157,7 +1160,7 @@ function openBorrarViaje(id) {
 function renderAdmin() {
   const cont = document.getElementById('memberList');
   cont.innerHTML = '';
-  state.miembros.forEach(m => {
+  state.miembrosActivos.forEach(m => {
     const inicial = m.nombre.charAt(0).toUpperCase();
     const row = document.createElement('div');
     row.className = 'member-row';
