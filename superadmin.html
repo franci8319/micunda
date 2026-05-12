@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>miCunda · Panel</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #F0F4F8; color: #222; font-size: 14px; }
+
+  /* Login */
+  .login-wrap { min-height: 100dvh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+  .login-box { background: #fff; border-radius: 16px; padding: 32px 28px; width: 100%; max-width: 360px; box-shadow: 0 4px 24px rgba(0,0,0,.1); }
+  .login-logo { text-align: center; font-size: 40px; margin-bottom: 8px; }
+  .login-title { text-align: center; font-size: 20px; font-weight: 800; color: #1a4a8a; margin-bottom: 4px; }
+  .login-sub { text-align: center; font-size: 12px; color: #999; margin-bottom: 24px; }
+  .field { margin-bottom: 14px; }
+  .field label { display: block; font-size: 12px; font-weight: 600; color: #555; margin-bottom: 5px; }
+  .field input { width: 100%; padding: 10px 12px; border: 1.5px solid #DDE3EA; border-radius: 8px; font-size: 14px; outline: none; }
+  .field input:focus { border-color: #1a4a8a; }
+  .btn-login { width: 100%; background: #1a4a8a; color: #fff; border: none; border-radius: 10px; padding: 12px; font-size: 15px; font-weight: 700; cursor: pointer; margin-top: 4px; }
+  .login-err { color: #c0392b; font-size: 12px; margin-top: 10px; text-align: center; min-height: 18px; }
+
+  /* Panel */
+  .panel { display: none; max-width: 900px; margin: 0 auto; padding: 24px 16px 60px; }
+  .panel-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+  .panel-header h1 { font-size: 22px; font-weight: 800; color: #1a4a8a; }
+  .btn-out { background: none; border: 1.5px solid #ccc; color: #666; border-radius: 8px; padding: 6px 14px; font-size: 12px; cursor: pointer; }
+
+  /* Stat cards */
+  .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 28px; }
+  .stat-card { background: #fff; border-radius: 12px; padding: 16px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,.06); }
+  .stat-num { font-size: 32px; font-weight: 800; color: #1a4a8a; line-height: 1; }
+  .stat-label { font-size: 12px; color: #888; margin-top: 4px; }
+
+  /* Section */
+  .section-title { font-size: 13px; font-weight: 700; color: #555; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 10px; }
+  .section-block { margin-bottom: 28px; }
+
+  /* Table */
+  .tbl { width: 100%; border-collapse: collapse; background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,.06); }
+  .tbl th { background: #1a4a8a; color: #fff; font-size: 11px; font-weight: 700; padding: 10px 14px; text-align: left; }
+  .tbl td { padding: 10px 14px; border-bottom: 1px solid #F0F4F8; font-size: 13px; }
+  .tbl tr:last-child td { border-bottom: none; }
+  .tbl tr:hover td { background: #F8FAFC; }
+  .badge-tipo { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+  .badge-semanal   { background: #E3F2FD; color: #1565C0; }
+  .badge-contrasena { background: #FFF3E0; color: #E65100; }
+
+  .empty { color: #aaa; font-size: 13px; text-align: center; padding: 20px; }
+  .loading { text-align: center; padding: 40px; color: #999; }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login-wrap" id="loginSection">
+  <div class="login-box">
+    <div class="login-logo">🚗</div>
+    <div class="login-title">miCunda</div>
+    <div class="login-sub">Panel de administración</div>
+    <div class="field">
+      <label>Token de acceso</label>
+      <input type="password" id="tokenInput" placeholder="••••••••" onkeydown="if(event.key==='Enter')doAccess()">
+    </div>
+    <button class="btn-login" onclick="doAccess()">Acceder</button>
+    <div class="login-err" id="loginErr"></div>
+  </div>
+</div>
+
+<!-- PANEL -->
+<div class="panel" id="panelSection">
+  <div class="panel-header">
+    <h1>🚗 miCunda · Panel</h1>
+    <button class="btn-out" onclick="doSalir()">Salir</button>
+  </div>
+
+  <div class="loading" id="loadingMsg">Cargando datos…</div>
+
+  <div id="panelContent" style="display:none">
+    <!-- Stats globales -->
+    <div class="stat-grid" id="statGrid"></div>
+
+    <!-- Cundas -->
+    <div class="section-block">
+      <div class="section-title">Cundas registradas</div>
+      <table class="tbl" id="cundasTable">
+        <thead>
+          <tr>
+            <th>Nombre</th>
+            <th>Creada</th>
+            <th>Miembros</th>
+            <th>Viajes</th>
+            <th>Último viaje</th>
+          </tr>
+        </thead>
+        <tbody id="cundasBody"></tbody>
+      </table>
+    </div>
+
+    <!-- Emails -->
+    <div class="section-block">
+      <div class="section-title">Últimos emails enviados</div>
+      <table class="tbl" id="emailsTable">
+        <thead>
+          <tr>
+            <th>Tipo</th>
+            <th>Cunda</th>
+            <th>Destinatarios</th>
+            <th>Fecha</th>
+          </tr>
+        </thead>
+        <tbody id="emailsBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://kjjdsfhtlqhatxyoljyg.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_5uv675tO624msA1B8L-rrw_1ktVk27p';
+
+let _token = '';
+
+async function doAccess() {
+  const token = document.getElementById('tokenInput').value.trim();
+  const errEl = document.getElementById('loginErr');
+  errEl.textContent = '';
+  if (!token) { errEl.textContent = 'Introduce el token'; return; }
+
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/get_superadmin_stats`, {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ p_token: token })
+    });
+    if (!res.ok) throw new Error('bad');
+    const data = await res.json();
+    _token = token;
+    document.getElementById('loginSection').style.display = 'none';
+    document.getElementById('panelSection').style.display = 'block';
+    renderPanel(data);
+  } catch {
+    errEl.textContent = 'Token incorrecto o error de conexión';
+  }
+}
+
+function renderPanel(data) {
+  document.getElementById('loadingMsg').style.display = 'none';
+  document.getElementById('panelContent').style.display = 'block';
+
+  const t = data.totales || {};
+  document.getElementById('statGrid').innerHTML = [
+    { num: t.cundas   || 0, label: 'Cundas'   },
+    { num: t.miembros || 0, label: 'Miembros activos' },
+    { num: t.viajes   || 0, label: 'Viajes registrados' },
+    { num: t.emails   || 0, label: 'Emails enviados' }
+  ].map(s => `
+    <div class="stat-card">
+      <div class="stat-num">${s.num}</div>
+      <div class="stat-label">${s.label}</div>
+    </div>`).join('');
+
+  const cundas = data.cundas || [];
+  document.getElementById('cundasBody').innerHTML = cundas.length
+    ? cundas.map(c => `
+        <tr>
+          <td><strong>${c.nombre}</strong></td>
+          <td>${c.creada || '—'}</td>
+          <td>${c.miembros}</td>
+          <td>${c.viajes}</td>
+          <td>${c.ultimo_viaje || '—'}</td>
+        </tr>`).join('')
+    : `<tr><td colspan="5" class="empty">Sin cundas</td></tr>`;
+
+  const emails = data.emails_recientes || [];
+  document.getElementById('emailsBody').innerHTML = emails.length
+    ? emails.map(e => `
+        <tr>
+          <td><span class="badge-tipo badge-${e.tipo}">${e.tipo}</span></td>
+          <td>${e.cunda_nombre || '—'}</td>
+          <td>${e.destinatarios}</td>
+          <td>${e.fecha}</td>
+        </tr>`).join('')
+    : `<tr><td colspan="4" class="empty">Sin emails registrados</td></tr>`;
+}
+
+function doSalir() {
+  _token = '';
+  document.getElementById('tokenInput').value = '';
+  document.getElementById('panelSection').style.display = 'none';
+  document.getElementById('loginSection').style.display = 'flex';
+}
+
+document.getElementById('tokenInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') doAccess();
+});
+</script>
+</body>
+</html>

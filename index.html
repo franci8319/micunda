@@ -473,7 +473,7 @@
   <!-- TAB: HISTORIAL -->
   <div id="tabHistorial" class="tab-panel">
     <div class="card">
-      <div class="card-title"><i class="bi bi-clock-history"></i> Últimos 20 viajes</div>
+      <div class="card-title"><i class="bi bi-clock-history"></i> Historial</div>
       <div id="historyList"></div>
     </div>
   </div>
@@ -888,7 +888,7 @@ async function reloadAll() {
     await loadAll();
     renderRegistro();
     renderCuadrante();
-    renderHistorial();
+    renderHistorial(true);
     if (session.rol === 'admin') renderAdmin();
   } finally {
     showLoading(false);
@@ -1250,26 +1250,32 @@ async function ocultarGrupo() {
 // ════════════════════════════════════
 //  RENDER: HISTORIAL
 // ════════════════════════════════════
-function renderHistorial() {
+let _historialVisible = 20;
+
+function renderHistorial(resetPage) {
+  if (resetPage) _historialVisible = 20;
   const cont = document.getElementById('historyList');
   cont.innerHTML = '';
 
-  const recent = [...state.viajes]
+  const todos = [...state.viajes]
     .filter(v =>
       v.conductor_id === session.miembroId ||
       (v.asistentes || []).includes(session.miembroId)
     )
-    .reverse().slice(0, 20);
-  if (!recent.length) {
+    .reverse();
+
+  if (!todos.length) {
     cont.innerHTML = '<p class="empty-msg">Aún no hay viajes registrados.</p>';
     return;
   }
 
-  recent.forEach(v => {
+  const visible = todos.slice(0, _historialVisible);
+  const canEdit = session.rol === 'admin' || session.rol === 'editor';
+
+  visible.forEach(v => {
     const asistNombres = (v.asistentes || []).map(id => nombreMiembro(id)).join(', ');
     const registradoPor = v.created_by ? nombreMiembro(v.created_by) : '?';
     const modificadoPor = v.updated_by ? ` · Editado por ${nombreMiembro(v.updated_by)}` : '';
-    const canEdit = session.rol === 'admin' || session.rol === 'editor';
 
     const row = document.createElement('div');
     row.className = 'history-row';
@@ -1295,6 +1301,20 @@ function renderHistorial() {
     `;
     cont.appendChild(row);
   });
+
+  if (_historialVisible < todos.length) {
+    const resto = todos.length - _historialVisible;
+    const btn = document.createElement('button');
+    btn.style.cssText = 'display:block;width:100%;margin-top:12px;padding:10px;background:none;border:2px solid var(--azul);color:var(--azul);border-radius:10px;font-size:13px;font-weight:700;cursor:pointer';
+    btn.textContent = `Ver ${Math.min(resto, 20)} más (${resto} restantes)`;
+    btn.onclick = () => { _historialVisible += 20; renderHistorial(); };
+    cont.appendChild(btn);
+  } else if (todos.length > 20) {
+    const info = document.createElement('p');
+    info.style.cssText = 'text-align:center;font-size:12px;color:#aaa;margin-top:10px';
+    info.textContent = `${todos.length} viajes en total`;
+    cont.appendChild(info);
+  }
 }
 
 // ════════════════════════════════════
@@ -1700,9 +1720,11 @@ async function sendRecordarPwd() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        to:      email,
-        subject: '🚗 Tus datos de acceso — miCunda',
-        html:    buildPwdEmail(nombre, email, pwd, session.cundaNombre)
+        to:           email,
+        subject:      '🚗 Tus datos de acceso — miCunda',
+        html:         buildPwdEmail(nombre, email, pwd, session.cundaNombre),
+        tipo:         'contrasena',
+        cunda_nombre: session.cundaNombre
       })
     });
     if (!res.ok) throw new Error('email_fail');

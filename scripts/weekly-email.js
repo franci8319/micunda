@@ -195,6 +195,22 @@ async function main() {
 
     const data = await res.json();
     console.log(`[${cunda.nombre}] → ${emails.join(', ')}`, data.id || data);
+
+    if (data.id) {
+      await fetch(`${SUPABASE_URL}/rest/v1/email_logs`, {
+        method: 'POST',
+        headers: {
+          'apikey': SUPABASE_KEY,
+          'Authorization': `Bearer ${SUPABASE_KEY}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          tipo:          'semanal',
+          cunda_nombre:  cunda.nombre,
+          destinatarios: emails.length
+        })
+      }).catch(() => {});
+    }
   }
 }
 
