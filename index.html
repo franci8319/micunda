@@ -1013,11 +1013,7 @@ function renderCuadrante() {
   const cont = document.getElementById('cuadranteContent');
   cont.innerHTML = '';
 
-  // Solo viajes donde participa el usuario actual
-  const misViajes = state.viajes.filter(v =>
-    v.conductor_id === session.miembroId ||
-    (v.asistentes || []).includes(session.miembroId)
-  );
+  const misViajes = state.viajes;
 
   if (!misViajes.length) {
     cont.innerHTML = '<p class="empty-msg">Aún no hay viajes registrados.</p>';
