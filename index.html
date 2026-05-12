@@ -333,10 +333,6 @@
     <!-- ENTRAR -->
     <div id="loginEntrar">
       <div class="login-field">
-        <label class="login-label">Nombre de tu cunda</label>
-        <input type="text" id="loginCunda" class="login-input" placeholder="Ej: Cunda del trabajo">
-      </div>
-      <div class="login-field">
         <label class="login-label">Email</label>
         <input type="email" id="loginEmail" class="login-input" placeholder="tu@email.com"
                autocomplete="email">
@@ -574,13 +570,12 @@ function switchLoginTab(tab) {
 }
 
 async function doLogin() {
-  const nombreCunda = document.getElementById('loginCunda').value.trim();
-  const email       = document.getElementById('loginEmail').value.trim().toLowerCase();
-  const password    = document.getElementById('loginPassword').value;
-  const errEl       = document.getElementById('loginError');
+  const email    = document.getElementById('loginEmail').value.trim().toLowerCase();
+  const password = document.getElementById('loginPassword').value;
+  const errEl    = document.getElementById('loginError');
   errEl.textContent = '';
 
-  if (!nombreCunda || !email || !password) {
+  if (!email || !password) {
     errEl.textContent = 'Rellena todos los campos';
     return;
   }
@@ -591,36 +586,27 @@ async function doLogin() {
 
   showLoading(true);
   try {
-    // Buscar cunda por nombre
-    const { data: cundas } = await db
-      .from('cundas')
-      .select('id, nombre')
-      .ilike('nombre', nombreCunda)
-      .limit(1);
-
-    if (!cundas?.length) {
-      errEl.textContent = 'Cunda no encontrada';
-      return;
-    }
-    const cunda = cundas[0];
-
-    // Verificar credenciales
-    const { data: miembro } = await db.rpc('login', {
-      p_cunda_id: cunda.id,
+    const { data: miembro } = await db.rpc('login_by_email', {
       p_email:    email,
       p_password: password
     });
 
     if (!miembro?.length) {
-      errEl.textContent = 'Usuario o contraseña incorrectos';
+      errEl.textContent = 'Email o contraseña incorrectos';
       return;
     }
+
+    const { data: cunda } = await db
+      .from('cundas')
+      .select('id, nombre')
+      .eq('id', miembro[0].cunda_id)
+      .single();
 
     session = {
       miembroId:     miembro[0].id,
       nombre:        miembro[0].nombre,
       rol:           miembro[0].rol,
-      cundaId:       cunda.id,
+      cundaId:       miembro[0].cunda_id,
       cundaNombre:   cunda.nombre,
       incorporadoAt: miembro[0].incorporado_at
     };
