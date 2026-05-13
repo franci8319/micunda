@@ -69,10 +69,12 @@
   .badge-contrasena { background: var(--naranja); color: #fff; }
   .badge-baja { font-size: 11px; color: var(--metal); margin-left: 6px; }
 
-  .btn-edit { background: var(--azul); color: #fff; border: none; padding: 5px 11px; font-family: 'Oswald', sans-serif; font-size: 12px; font-weight: 700; cursor: pointer; margin-right: 4px; letter-spacing: 1px; box-shadow: 2px 2px 0 var(--azul-dark); }
-  .btn-edit:hover { background: var(--azul-dark); }
-  .btn-del  { background: var(--rojo); color: #fff; border: none; padding: 5px 11px; font-family: 'Oswald', sans-serif; font-size: 12px; font-weight: 700; cursor: pointer; letter-spacing: 1px; box-shadow: 2px 2px 0 #880022; }
-  .btn-del:hover { background: #A01818; }
+  .btn-edit  { background: var(--azul); color: #fff; border: none; padding: 5px 11px; font-family: 'Oswald', sans-serif; font-size: 12px; font-weight: 700; cursor: pointer; margin-right: 4px; letter-spacing: 1px; box-shadow: 2px 2px 0 var(--azul-dark); }
+  .btn-edit:hover  { background: var(--azul-dark); }
+  .btn-del   { background: var(--rojo); color: #fff; border: none; padding: 5px 11px; font-family: 'Oswald', sans-serif; font-size: 12px; font-weight: 700; cursor: pointer; margin-right: 4px; letter-spacing: 1px; box-shadow: 2px 2px 0 #880022; }
+  .btn-del:hover   { background: #A01818; }
+  .btn-email { background: #7A5C00; color: #fff; border: none; padding: 5px 11px; font-family: 'Oswald', sans-serif; font-size: 12px; font-weight: 700; cursor: pointer; letter-spacing: 1px; box-shadow: 2px 2px 0 #4A3800; }
+  .btn-email:hover { background: #4A3800; }
   .btn-save { background: var(--azul); color: #fff; border: none; padding: 5px 12px; font-family: 'Oswald', sans-serif; font-size: 12px; font-weight: 700; cursor: pointer; letter-spacing: 1px; box-shadow: 2px 2px 0 var(--azul-dark); }
   .btn-save:hover { background: var(--azul-dark); }
 
@@ -207,6 +209,20 @@
   </div>
 </div>
 
+<!-- MODAL CORREO CAFÉ -->
+<div class="modal-bg" id="modalCorreo" style="display:none">
+  <div class="modal-box sm">
+    <h3 style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:#7A5C00;letter-spacing:2px;margin:0 0 10px">☕ Correo de apoyo</h3>
+    <p>Se enviará un correo a todos los miembros activos de <strong id="correoCundaNombre"></strong> invitándoles a apoyar la app.</p>
+    <div id="correoMiembrosInfo" style="font-family:'Oswald',sans-serif;font-size:13px;color:var(--txt-dim);margin-bottom:4px"></div>
+    <div id="correoMsg" class="edit-msg" style="margin-bottom:8px"></div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="cerrarModalCorreo()">Cancelar</button>
+      <button id="btnConfirmarCorreo" class="btn-confirm" onclick="confirmarCorreoCafe()" style="background:#7A5C00;box-shadow:3px 3px 0 #4A3800">Enviar</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL CONFIRMAR BORRADO -->
 <div class="modal-bg" id="modalDel" style="display:none">
   <div class="modal-box sm">
@@ -225,9 +241,13 @@
 const SUPABASE_URL = 'https://kjjdsfhtlqhatxyoljyg.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_5uv675tO624msA1B8L-rrw_1ktVk27p';
 
+const CAFE_URL = 'https://ko-fi.com/micunda'; // ← cambia por tu enlace de donación
+
 let _token = '';
-let _pendingDeleteId = null;
-let _editingCundaId  = null;
+let _pendingDeleteId    = null;
+let _editingCundaId     = null;
+let _pendingEmailCundaId     = null;
+let _pendingEmailCundaNombre = null;
 
 async function rpc(fn, params) {
   const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${fn}`, {
@@ -302,8 +322,9 @@ function renderPanel(data) {
           <td>${c.viajes}</td>
           <td>${c.ultimo_viaje || '—'}</td>
           <td style="white-space:nowrap">
-            <button class="btn-edit" onclick="abrirEditCunda('${c.id}','${c.nombre.replace(/'/g,"\\'")}')">Editar</button>
-            <button class="btn-del"  onclick="pedirDelete('${c.id}','${c.nombre.replace(/'/g,"\\'")}')">Eliminar</button>
+            <button class="btn-edit"  onclick="abrirEditCunda('${c.id}','${c.nombre.replace(/'/g,"\\'")}')">Editar</button>
+            <button class="btn-del"   onclick="pedirDelete('${c.id}','${c.nombre.replace(/'/g,"\\'")}')">Eliminar</button>
+            <button class="btn-email" onclick="pedirCorreoCafe('${c.id}','${c.nombre.replace(/'/g,"\\'")}')">☕ Correo</button>
           </td>
         </tr>`).join('')
     : `<tr><td colspan="6" class="empty">Sin cundas</td></tr>`;
@@ -445,6 +466,131 @@ async function confirmarDelete() {
   } catch (err) {
     alert('Error al eliminar: ' + err.message);
   }
+}
+
+// ── Correo café ──
+async function pedirCorreoCafe(id, nombre) {
+  _pendingEmailCundaId     = id;
+  _pendingEmailCundaNombre = nombre;
+  document.getElementById('correoCundaNombre').textContent = nombre;
+  document.getElementById('correoMsg').textContent = '';
+  document.getElementById('correoMiembrosInfo').textContent = 'Cargando miembros…';
+  document.getElementById('btnConfirmarCorreo').disabled = true;
+  document.getElementById('modalCorreo').style.display = 'flex';
+
+  try {
+    const miembros = await rpc('get_cunda_miembros', { p_token: _token, p_cunda_id: id });
+    const activos  = (miembros || []).filter(m => m.email && !m.deleted_at);
+    document.getElementById('correoMiembrosInfo').textContent =
+      `Destinatarios: ${activos.map(m => m.nombre).join(', ')} (${activos.length})`;
+    document.getElementById('btnConfirmarCorreo').disabled = activos.length === 0;
+    if (!activos.length) {
+      document.getElementById('correoMsg').className = 'edit-msg err';
+      document.getElementById('correoMsg').textContent = 'Ningún miembro tiene email registrado';
+    }
+  } catch {
+    document.getElementById('correoMiembrosInfo').textContent = 'Error al cargar miembros';
+  }
+}
+
+function cerrarModalCorreo() {
+  _pendingEmailCundaId     = null;
+  _pendingEmailCundaNombre = null;
+  document.getElementById('modalCorreo').style.display = 'none';
+}
+
+async function confirmarCorreoCafe() {
+  if (!_pendingEmailCundaId) return;
+  const id     = _pendingEmailCundaId;
+  const nombre = _pendingEmailCundaNombre;
+
+  const btn = document.getElementById('btnConfirmarCorreo');
+  const msg = document.getElementById('correoMsg');
+  btn.disabled   = true;
+  btn.textContent = 'Enviando…';
+  msg.textContent = '';
+
+  try {
+    const miembros = await rpc('get_cunda_miembros', { p_token: _token, p_cunda_id: id });
+    const emails   = (miembros || []).filter(m => m.email && !m.deleted_at).map(m => m.email);
+    if (!emails.length) throw new Error('Sin emails');
+
+    const res = await fetch('/api/send-email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        to:           emails,
+        subject:      '☕ miCunda — ¡Gracias por seguir aquí!',
+        html:         buildCafeEmail(nombre),
+        tipo:         'cafe',
+        cunda_nombre: nombre
+      })
+    });
+    if (!res.ok) throw new Error(await res.text());
+
+    cerrarModalCorreo();
+    alert(`Correo enviado a ${emails.length} miembro${emails.length > 1 ? 's' : ''} ✓`);
+    refreshStats();
+  } catch (err) {
+    msg.className   = 'edit-msg err';
+    msg.textContent = 'Error: ' + err.message;
+    btn.disabled    = false;
+    btn.textContent = 'Enviar';
+  }
+}
+
+function buildCafeEmail(cundaNombre) {
+  return `<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#EDE8DF;font-family:Arial,sans-serif">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#EDE8DF;padding:30px 0">
+    <tr><td align="center">
+      <table width="520" cellpadding="0" cellspacing="0" style="background:#fff;border:2px solid #B8A888;box-shadow:4px 4px 0 rgba(0,0,0,.12);max-width:95%">
+
+        <!-- Cabecera -->
+        <tr><td style="background:#1a4a8a;padding:22px 30px;text-align:center">
+          <div style="font-family:Arial,sans-serif;font-size:28px;font-weight:900;color:#fff;letter-spacing:4px;text-transform:uppercase">miCunda</div>
+          <div style="font-size:13px;color:#a8c4f0;margin-top:4px;letter-spacing:1px">${cundaNombre}</div>
+        </td></tr>
+
+        <!-- Cuerpo -->
+        <tr><td style="padding:30px 32px">
+          <p style="font-size:16px;color:#1A1208;line-height:1.7;margin:0 0 18px">
+            Hola,
+          </p>
+          <p style="font-size:15px;color:#1A1208;line-height:1.7;margin:0 0 18px">
+            Llevamos un tiempo usando <strong>miCunda</strong> para organizar los viajes en coche. La app no tiene publicidad, no cobra nada y la mantengo en mi tiempo libre.
+          </p>
+          <p style="font-size:15px;color:#1A1208;line-height:1.7;margin:0 0 28px">
+            Si te resulta útil y quieres apoyarla, puedes invitarme a un café. No es obligatorio — seguirá siendo gratis igualmente. 😊
+          </p>
+
+          <!-- Botón -->
+          <table cellpadding="0" cellspacing="0" style="margin:0 auto 28px">
+            <tr><td style="background:#D4520A;box-shadow:3px 3px 0 #8B3000">
+              <a href="${CAFE_URL}" target="_blank"
+                 style="display:inline-block;padding:13px 32px;color:#fff;font-size:15px;font-weight:700;text-decoration:none;letter-spacing:2px;text-transform:uppercase">
+                ☕ Invitar a un café
+              </a>
+            </td></tr>
+          </table>
+
+          <p style="font-size:13px;color:#888;line-height:1.6;margin:0">
+            Gracias por usar miCunda. ¡Buen viaje!
+          </p>
+        </td></tr>
+
+        <!-- Pie -->
+        <tr><td style="background:#f5f0e8;border-top:1px solid #B8A888;padding:14px 32px;text-align:center">
+          <span style="font-size:11px;color:#aaa">micunda.es · Este correo se envía de forma ocasional y sin publicidad</span>
+        </td></tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
 }
 
 document.getElementById('tokenInput').addEventListener('keydown', e => {
