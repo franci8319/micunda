@@ -377,6 +377,23 @@
 
     .empty-msg { text-align: center; color: var(--txt-dim); font-family: 'Oswald', sans-serif; font-size: 13px; padding: 20px 0; letter-spacing: 1px; }
 
+    /* ── Banner sin conexión ── */
+    .offline-banner {
+      display: none; margin-bottom: 14px;
+      background: #FDF3E8; border: 2px solid var(--naranja);
+      box-shadow: 4px 4px 0 rgba(212,82,10,.2);
+      padding: 12px 14px; gap: 10px;
+    }
+    .offline-banner.show { display: flex; align-items: center; }
+    .offline-banner-txt { flex: 1; font-family: 'Oswald', sans-serif; font-size: 14px; color: var(--naranja); font-weight: 600; line-height: 1.4; }
+    .offline-banner-txt small { display: block; font-weight: 400; font-size: 12px; color: var(--txt-dim); margin-top: 2px; }
+    .offline-retry {
+      background: var(--naranja); color: #fff; border: none;
+      padding: 8px 14px; font-family: 'Oswald', sans-serif; font-size: 13px; font-weight: 700;
+      cursor: pointer; box-shadow: 3px 3px 0 #7A2A00; white-space: nowrap; letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
     /* ── Selector de cunda ── */
     .selector-screen {
       position: fixed; inset: 0; z-index: 100000;
@@ -520,6 +537,13 @@
 
   <!-- TAB: REGISTRO -->
   <div id="tabRegistro" class="tab-panel active">
+    <div id="offlineBanner" class="offline-banner">
+      <div class="offline-banner-txt">
+        <i class="bi bi-wifi-off"></i> Viaje no guardado
+        <small>Sin conexión. Comprueba tu red y pulsa Reintentar.</small>
+      </div>
+      <button class="offline-retry" onclick="retryRegistrarViaje()">Reintentar</button>
+    </div>
     <div class="card">
       <div class="card-title" style="font-size:15px;color:var(--azul);text-transform:none;letter-spacing:0">
         <i class="bi bi-people-fill"></i> ¿Quién viene hoy?
@@ -1185,8 +1209,11 @@ function onDriverClick(conductorId) {
   document.getElementById('modalViaje').style.display = 'flex';
 }
 
+let _pendingConductorId = null;
+
 async function registrarViaje(conductorId) {
   showLoading(true);
+  document.getElementById('offlineBanner').classList.remove('show');
   const asistenteIds = state.miembrosActivos
     .filter(m => state.attendance[m.id] && m.id !== conductorId)
     .map(m => m.id);
@@ -1202,13 +1229,20 @@ async function registrarViaje(conductorId) {
       created_by:   session.miembroId
     });
     if (error) throw error;
+    _pendingConductorId = null;
     showToast(`✓ Viaje registrado para ${nombreMiembro(conductorId)}`, 'ok');
     await reloadAll();
   } catch (err) {
-    showToast('Error al registrar el viaje', 'err');
+    _pendingConductorId = conductorId;
+    document.getElementById('offlineBanner').classList.add('show');
+    switchTab('tabRegistro');
     console.error(err);
     showLoading(false);
   }
+}
+
+function retryRegistrarViaje() {
+  if (_pendingConductorId) registrarViaje(_pendingConductorId);
 }
 
 
