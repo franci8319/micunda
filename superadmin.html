@@ -46,20 +46,51 @@
   .badge-tipo { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
   .badge-semanal    { background: #E3F2FD; color: #1565C0; }
   .badge-contrasena { background: #FFF3E0; color: #E65100; }
-  .btn-del { background: #FFEBEE; color: #c0392b; border: none; border-radius: 7px; padding: 5px 10px; font-size: 12px; font-weight: 700; cursor: pointer; }
+  .badge-baja { font-size: 10px; color: #aaa; margin-left: 6px; }
+
+  .btn-edit { background: #E3F2FD; color: #1565C0; border: none; border-radius: 7px; padding: 5px 10px; font-size: 12px; font-weight: 700; cursor: pointer; margin-right: 4px; }
+  .btn-edit:hover { background: #BBDEFB; }
+  .btn-del  { background: #FFEBEE; color: #c0392b; border: none; border-radius: 7px; padding: 5px 10px; font-size: 12px; font-weight: 700; cursor: pointer; }
   .btn-del:hover { background: #FFCDD2; }
+  .btn-save { background: #1a4a8a; color: #fff; border: none; border-radius: 7px; padding: 5px 12px; font-size: 12px; font-weight: 700; cursor: pointer; }
+  .btn-save:hover { background: #0d47a1; }
 
   .empty { color: #aaa; font-size: 13px; text-align: center; padding: 20px; }
   .loading { text-align: center; padding: 40px; color: #999; }
 
-  /* Modal confirmación */
+  /* Modales */
   .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,.5); display: flex; align-items: center; justify-content: center; z-index: 999; padding: 20px; }
-  .modal-box { background: #fff; border-radius: 14px; padding: 28px 24px; max-width: 380px; width: 100%; box-shadow: 0 8px 32px rgba(0,0,0,.2); }
-  .modal-box h3 { font-size: 16px; font-weight: 800; margin-bottom: 10px; color: #c0392b; }
+  .modal-box { background: #fff; border-radius: 14px; padding: 28px 24px; width: 100%; box-shadow: 0 8px 32px rgba(0,0,0,.2); max-height: 90dvh; overflow-y: auto; }
+  .modal-box.sm { max-width: 380px; }
+  .modal-box.lg { max-width: 640px; }
+  .modal-box h3 { font-size: 16px; font-weight: 800; margin-bottom: 16px; color: #1a4a8a; }
+  .modal-box h3.danger { color: #c0392b; }
   .modal-box p { font-size: 13px; color: #555; margin-bottom: 20px; line-height: 1.6; }
-  .modal-btns { display: flex; gap: 10px; justify-content: flex-end; }
-  .btn-cancel { background: #F5F5F5; color: #555; border: none; border-radius: 8px; padding: 9px 18px; font-size: 13px; font-weight: 600; cursor: pointer; }
+  .modal-btns { display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px; }
+  .btn-cancel     { background: #F5F5F5; color: #555; border: none; border-radius: 8px; padding: 9px 18px; font-size: 13px; font-weight: 600; cursor: pointer; }
+  .btn-confirm    { background: #1a4a8a; color: #fff; border: none; border-radius: 8px; padding: 9px 18px; font-size: 13px; font-weight: 700; cursor: pointer; }
   .btn-confirm-del { background: #c0392b; color: #fff; border: none; border-radius: 8px; padding: 9px 18px; font-size: 13px; font-weight: 700; cursor: pointer; }
+
+  /* Edit modal específico */
+  .edit-section { margin-bottom: 22px; }
+  .edit-section-title { font-size: 11px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 8px; }
+  .edit-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .edit-row input { flex: 1; padding: 8px 10px; border: 1.5px solid #DDE3EA; border-radius: 7px; font-size: 13px; outline: none; }
+  .edit-row input:focus { border-color: #1a4a8a; }
+  .edit-msg { font-size: 12px; margin-top: 4px; min-height: 16px; }
+  .edit-msg.ok  { color: #2E7D32; }
+  .edit-msg.err { color: #c0392b; }
+
+  /* Member rows */
+  .member-row { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid #F0F4F8; }
+  .member-row:last-child { border-bottom: none; }
+  .member-info { flex: 1; min-width: 0; }
+  .member-name { font-size: 13px; font-weight: 700; color: #333; }
+  .member-email { font-size: 11px; color: #888; margin-top: 1px; }
+  .member-edit-form { display: none; flex-direction: column; gap: 6px; padding: 10px 0 4px; }
+  .member-edit-form input { padding: 7px 10px; border: 1.5px solid #DDE3EA; border-radius: 7px; font-size: 13px; outline: none; width: 100%; }
+  .member-edit-form input:focus { border-color: #1a4a8a; }
+  .member-edit-btns { display: flex; gap: 6px; }
 </style>
 </head>
 <body>
@@ -125,15 +156,42 @@
   </div>
 </div>
 
+<!-- MODAL EDITAR CUNDA -->
+<div class="modal-bg" id="modalEdit" style="display:none">
+  <div class="modal-box lg">
+    <h3 id="editModalTitle">Editar cunda</h3>
+
+    <!-- Nombre cunda -->
+    <div class="edit-section">
+      <div class="edit-section-title">Nombre de la cunda</div>
+      <div class="edit-row">
+        <input type="text" id="editCundaNombre" placeholder="Nombre de la cunda">
+        <button class="btn-save" onclick="guardarNombreCunda()">Guardar</button>
+      </div>
+      <div class="edit-msg" id="editCundaMsg"></div>
+    </div>
+
+    <!-- Miembros -->
+    <div class="edit-section">
+      <div class="edit-section-title">Miembros</div>
+      <div id="editMiembrosList"><div class="loading" style="padding:20px">Cargando miembros…</div></div>
+    </div>
+
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="cerrarModalEdit()">Cerrar</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL CONFIRMAR BORRADO -->
 <div class="modal-bg" id="modalDel" style="display:none">
-  <div class="modal-box">
-    <h3>⚠️ Eliminar cunda</h3>
+  <div class="modal-box sm">
+    <h3 class="danger">⚠️ Eliminar cunda</h3>
     <p>¿Eliminar <strong id="delNombre"></strong>?<br>
     Se borrarán todos sus miembros, viajes y cuadrantes.<br>
     <strong>Esta acción no se puede deshacer.</strong></p>
     <div class="modal-btns">
-      <button class="btn-cancel" onclick="cerrarModal()">Cancelar</button>
+      <button class="btn-cancel" onclick="cerrarModalDel()">Cancelar</button>
       <button class="btn-confirm-del" onclick="confirmarDelete()">Eliminar</button>
     </div>
   </div>
@@ -145,6 +203,7 @@ const SUPABASE_KEY = 'sb_publishable_5uv675tO624msA1B8L-rrw_1ktVk27p';
 
 let _token = '';
 let _pendingDeleteId = null;
+let _editingCundaId  = null;
 
 async function rpc(fn, params) {
   const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${fn}`, {
@@ -160,6 +219,7 @@ async function rpc(fn, params) {
   return res.json();
 }
 
+// ── Login ──
 async function doAccess() {
   const token = document.getElementById('tokenInput').value.trim();
   const errEl = document.getElementById('loginErr');
@@ -176,6 +236,14 @@ async function doAccess() {
   }
 }
 
+function doSalir() {
+  _token = '';
+  document.getElementById('tokenInput').value = '';
+  document.getElementById('panelSection').style.display = 'none';
+  document.getElementById('loginSection').style.display = 'flex';
+}
+
+// ── Stats ──
 async function refreshStats() {
   document.getElementById('loadingMsg').style.display = 'block';
   document.getElementById('panelContent').style.display = 'none';
@@ -208,7 +276,10 @@ function renderPanel(data) {
           <td>${c.miembros}</td>
           <td>${c.viajes}</td>
           <td>${c.ultimo_viaje || '—'}</td>
-          <td><button class="btn-del" onclick="pedirDelete('${c.id}','${c.nombre.replace(/'/g,"\\'")}')">Eliminar</button></td>
+          <td style="white-space:nowrap">
+            <button class="btn-edit" onclick="abrirEditCunda('${c.id}','${c.nombre.replace(/'/g,"\\'")}')">Editar</button>
+            <button class="btn-del"  onclick="pedirDelete('${c.id}','${c.nombre.replace(/'/g,"\\'")}')">Eliminar</button>
+          </td>
         </tr>`).join('')
     : `<tr><td colspan="6" class="empty">Sin cundas</td></tr>`;
 
@@ -224,33 +295,126 @@ function renderPanel(data) {
     : `<tr><td colspan="4" class="empty">Sin emails registrados</td></tr>`;
 }
 
+// ── Editar cunda ──
+async function abrirEditCunda(id, nombre) {
+  _editingCundaId = id;
+  document.getElementById('editModalTitle').textContent = `Editar · ${nombre}`;
+  document.getElementById('editCundaNombre').value = nombre;
+  document.getElementById('editCundaMsg').textContent = '';
+  document.getElementById('editMiembrosList').innerHTML = '<div class="loading" style="padding:20px">Cargando miembros…</div>';
+  document.getElementById('modalEdit').style.display = 'flex';
+
+  try {
+    const miembros = await rpc('get_cunda_miembros', { p_token: _token, p_cunda_id: id });
+    renderMiembros(miembros || []);
+  } catch {
+    document.getElementById('editMiembrosList').innerHTML = '<div class="edit-msg err">Error al cargar miembros</div>';
+  }
+}
+
+function cerrarModalEdit() {
+  _editingCundaId = null;
+  document.getElementById('modalEdit').style.display = 'none';
+}
+
+async function guardarNombreCunda() {
+  const nombre = document.getElementById('editCundaNombre').value.trim();
+  const msg    = document.getElementById('editCundaMsg');
+  msg.className = 'edit-msg';
+  msg.textContent = '';
+  if (!nombre) { msg.className = 'edit-msg err'; msg.textContent = 'El nombre no puede estar vacío'; return; }
+  try {
+    await rpc('update_cunda_nombre', { p_token: _token, p_cunda_id: _editingCundaId, p_nombre: nombre });
+    msg.className = 'edit-msg ok';
+    msg.textContent = 'Nombre actualizado ✓';
+    document.getElementById('editModalTitle').textContent = `Editar · ${nombre}`;
+    refreshStats();
+  } catch {
+    msg.className = 'edit-msg err';
+    msg.textContent = 'Error al guardar';
+  }
+}
+
+// ── Miembros ──
+function renderMiembros(miembros) {
+  const cont = document.getElementById('editMiembrosList');
+  if (!miembros.length) { cont.innerHTML = '<div class="empty">Sin miembros</div>'; return; }
+
+  cont.innerHTML = miembros.map(m => `
+    <div class="member-row" id="mrow_${m.id}">
+      <div class="member-info">
+        <div class="member-name">
+          ${m.nombre}
+          ${m.deleted_at ? '<span class="badge-baja">(baja)</span>' : ''}
+        </div>
+        <div class="member-email">${m.email || '—'} · ${m.rol}</div>
+        <div class="member-edit-form" id="mform_${m.id}">
+          <input type="text"  id="mnom_${m.id}"   value="${m.nombre}" placeholder="Nombre">
+          <input type="email" id="memail_${m.id}" value="${m.email || ''}" placeholder="Email">
+          <div class="member-edit-btns">
+            <button class="btn-save"   onclick="guardarMiembro('${m.id}')">Guardar</button>
+            <button class="btn-cancel" onclick="cancelarEditMiembro('${m.id}')">Cancelar</button>
+          </div>
+          <div class="edit-msg" id="mmsg_${m.id}"></div>
+        </div>
+      </div>
+      <button class="btn-edit" onclick="editarMiembro('${m.id}')">Editar</button>
+    </div>`).join('');
+}
+
+function editarMiembro(id) {
+  document.getElementById(`mform_${id}`).style.display = 'flex';
+  document.getElementById(`mnom_${id}`).focus();
+}
+
+function cancelarEditMiembro(id) {
+  document.getElementById(`mform_${id}`).style.display = 'none';
+  document.getElementById(`mmsg_${id}`).textContent = '';
+}
+
+async function guardarMiembro(id) {
+  const nombre = document.getElementById(`mnom_${id}`).value.trim();
+  const email  = document.getElementById(`memail_${id}`).value.trim();
+  const msg    = document.getElementById(`mmsg_${id}`);
+  msg.className = 'edit-msg';
+  msg.textContent = '';
+  if (!nombre) { msg.className = 'edit-msg err'; msg.textContent = 'El nombre no puede estar vacío'; return; }
+  try {
+    await rpc('update_miembro_datos', { p_token: _token, p_miembro_id: id, p_nombre: nombre, p_email: email });
+    msg.className = 'edit-msg ok';
+    msg.textContent = 'Guardado ✓';
+    // Actualiza la vista sin recargar todo
+    const row = document.getElementById(`mrow_${id}`);
+    row.querySelector('.member-name').firstChild.textContent = nombre + ' ';
+    row.querySelector('.member-email').textContent = `${email || '—'} · ${row.querySelector('.member-email').textContent.split('·')[1].trim()}`;
+    setTimeout(() => cancelarEditMiembro(id), 1200);
+  } catch {
+    msg.className = 'edit-msg err';
+    msg.textContent = 'Error al guardar';
+  }
+}
+
+// ── Eliminar cunda ──
 function pedirDelete(id, nombre) {
   _pendingDeleteId = id;
   document.getElementById('delNombre').textContent = nombre;
   document.getElementById('modalDel').style.display = 'flex';
 }
 
-function cerrarModal() {
+function cerrarModalDel() {
   _pendingDeleteId = null;
   document.getElementById('modalDel').style.display = 'none';
 }
 
 async function confirmarDelete() {
   if (!_pendingDeleteId) return;
-  cerrarModal();
+  cerrarModalDel();
   try {
     await rpc('delete_cunda', { p_token: _token, p_cunda_id: _pendingDeleteId });
     await refreshStats();
   } catch (err) {
     alert('Error al eliminar: ' + err.message);
   }
-}
-
-function doSalir() {
-  _token = '';
-  document.getElementById('tokenInput').value = '';
-  document.getElementById('panelSection').style.display = 'none';
-  document.getElementById('loginSection').style.display = 'flex';
 }
 
 document.getElementById('tokenInput').addEventListener('keydown', e => {
