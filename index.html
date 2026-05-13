@@ -744,6 +744,18 @@
   </div>
 </div>
 
+<!-- MODAL: CAMBIAR ROL -->
+<div id="modalCambiarRol" class="modal-backdrop" style="display:none" onclick="closeModal('modalCambiarRol',event)">
+  <div class="modal-sheet" onclick="event.stopPropagation()">
+    <div class="modal-title">Cambiar rol</div>
+    <div class="modal-text">¿Cambiar el rol de <strong id="modalRolNombre"></strong> a <strong id="modalRolNuevo"></strong>?</div>
+    <div class="modal-btns">
+      <button class="btn-cancel"  onclick="closeModal('modalCambiarRol')">Cancelar</button>
+      <button class="btn-confirm" onclick="confirmarCambiarRol()">Confirmar</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL: ELIMINAR MIEMBRO -->
 <div id="modalEliminarMiembro" class="modal-backdrop" style="display:none" onclick="closeModal('modalEliminarMiembro',event)">
   <div class="modal-sheet" onclick="event.stopPropagation()">
@@ -795,6 +807,8 @@ let state   = { miembros: [], viajes: [], attendance: {} };
 let _editingViajeId    = null;
 let _eliminarMiembroId = null;
 let _editarMiembroId   = null;
+let _cambiarRolId      = null;
+let _cambiarRolNuevo   = null;
 
 // ════════════════════════════════════
 //  AUTH
@@ -1553,12 +1567,38 @@ function renderAdmin() {
         <i class="bi bi-pencil-fill"></i>
       </button>
       ${m.id !== session.miembroId ? `
+      <button class="action-btn edit" onclick="openCambiarRol('${m.id}','${m.nombre}','${m.rol}')" title="Cambiar rol" style="color:var(--gold)">
+        <i class="bi bi-shield-fill"></i>
+      </button>
       <button class="action-btn del" onclick="openEliminarMiembro('${m.id}','${m.nombre}')" title="Eliminar">
         <i class="bi bi-person-x-fill"></i>
       </button>` : ''}
     `;
     cont.appendChild(row);
   });
+}
+
+function openCambiarRol(id, nombre, rolActual) {
+  _cambiarRolId    = id;
+  _cambiarRolNuevo = rolActual === 'admin' ? 'editor' : 'admin';
+  document.getElementById('modalRolNombre').textContent = nombre;
+  document.getElementById('modalRolNuevo').textContent  = _cambiarRolNuevo === 'admin' ? 'Admin' : 'Editor';
+  document.getElementById('modalCambiarRol').style.display = 'flex';
+}
+
+async function confirmarCambiarRol() {
+  closeModal('modalCambiarRol');
+  showLoading(true);
+  try {
+    const { error } = await db.from('miembros').update({ rol: _cambiarRolNuevo }).eq('id', _cambiarRolId);
+    if (error) throw error;
+    showToast(`Rol actualizado a ${_cambiarRolNuevo}`, 'ok');
+    await reloadAll();
+  } catch (err) {
+    showToast('Error al cambiar el rol', 'err');
+    console.error(err);
+    showLoading(false);
+  }
 }
 
 function openEliminarMiembro(id, nombre) {

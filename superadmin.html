@@ -371,10 +371,14 @@ function renderMiembros(miembros) {
           ${m.nombre}
           ${m.deleted_at ? '<span class="badge-baja">(baja)</span>' : ''}
         </div>
-        <div class="member-email">${m.email || '—'} · ${m.rol}</div>
+        <div class="member-email" id="minfo_${m.id}">${m.email || '—'} · ${m.rol}</div>
         <div class="member-edit-form" id="mform_${m.id}">
           <input type="text"  id="mnom_${m.id}"   value="${m.nombre}" placeholder="Nombre">
           <input type="email" id="memail_${m.id}" value="${m.email || ''}" placeholder="Email">
+          <select id="mrol_${m.id}" style="padding:7px 10px;border:2px solid var(--border);background:#fff;font-family:'Oswald',sans-serif;font-size:14px;color:var(--txt);outline:none;width:100%">
+            <option value="admin"  ${m.rol==='admin' ?'selected':''}>Admin</option>
+            <option value="editor" ${m.rol==='editor'?'selected':''}>Editor</option>
+          </select>
           <div class="member-edit-btns">
             <button class="btn-save"   onclick="guardarMiembro('${m.id}')">Guardar</button>
             <button class="btn-cancel" onclick="cancelarEditMiembro('${m.id}')">Cancelar</button>
@@ -399,18 +403,18 @@ function cancelarEditMiembro(id) {
 async function guardarMiembro(id) {
   const nombre = document.getElementById(`mnom_${id}`).value.trim();
   const email  = document.getElementById(`memail_${id}`).value.trim();
+  const rol    = document.getElementById(`mrol_${id}`).value;
   const msg    = document.getElementById(`mmsg_${id}`);
   msg.className = 'edit-msg';
   msg.textContent = '';
   if (!nombre) { msg.className = 'edit-msg err'; msg.textContent = 'El nombre no puede estar vacío'; return; }
   try {
-    await rpc('update_miembro_datos', { p_token: _token, p_miembro_id: id, p_nombre: nombre, p_email: email });
+    await rpc('update_miembro_datos', { p_token: _token, p_miembro_id: id, p_nombre: nombre, p_email: email, p_rol: rol });
     msg.className = 'edit-msg ok';
     msg.textContent = 'Guardado ✓';
-    // Actualiza la vista sin recargar todo
-    const row = document.getElementById(`mrow_${id}`);
-    row.querySelector('.member-name').firstChild.textContent = nombre + ' ';
-    row.querySelector('.member-email').textContent = `${email || '—'} · ${row.querySelector('.member-email').textContent.split('·')[1].trim()}`;
+    document.getElementById(`minfo_${id}`).textContent = `${email || '—'} · ${rol}`;
+    document.getElementById(`mnom_${id}`).defaultValue   = nombre;
+    document.getElementById(`memail_${id}`).defaultValue = email;
     setTimeout(() => cancelarEditMiembro(id), 1200);
   } catch {
     msg.className = 'edit-msg err';
