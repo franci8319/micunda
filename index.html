@@ -116,6 +116,13 @@
       letter-spacing: 1px; text-transform: uppercase;
     }
     .hdr-logout:hover { border-color: #fff; color: #fff; }
+    .conn-dot {
+      width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0;
+      background: #4CAF50; box-shadow: 0 0 0 2px rgba(255,255,255,.25);
+      transition: background .4s;
+    }
+    .conn-dot.offline { background: var(--rojo); animation: pulse-red .9s ease-in-out infinite; }
+    @keyframes pulse-red { 0%,100% { box-shadow: 0 0 0 2px rgba(255,255,255,.25); } 50% { box-shadow: 0 0 0 4px rgba(196,30,30,.4); } }
 
     /* ── Banner instalar PWA ── */
     .install-banner {
@@ -504,9 +511,12 @@
         <div id="hdrUser"  class="hdr-sub">—</div>
       </div>
     </div>
-    <button class="hdr-logout" onclick="doLogout()">
-      <i class="bi bi-box-arrow-right"></i> Salir
-    </button>
+    <div style="display:flex;align-items:center;gap:10px">
+      <div id="connDot" class="conn-dot" title="Conexión con el servidor"></div>
+      <button class="hdr-logout" onclick="doLogout()">
+        <i class="bi bi-box-arrow-right"></i> Salir
+      </button>
+    </div>
   </header>
 
   <!-- BANNER: INSTALAR PWA -->
@@ -889,7 +899,7 @@ async function doLogin() {
     }
   } catch (err) {
     console.error(err);
-    errEl.textContent = 'Error de conexión';
+    errEl.textContent = navigator.onLine ? 'Error de conexión' : 'Sin conexión — comprueba tu red';
   } finally {
     showLoading(false);
   }
@@ -1212,6 +1222,12 @@ function onDriverClick(conductorId) {
 let _pendingConductorId = null;
 
 async function registrarViaje(conductorId) {
+  if (!navigator.onLine) {
+    _pendingConductorId = conductorId;
+    document.getElementById('offlineBanner').classList.add('show');
+    switchTab('tabRegistro');
+    return;
+  }
   showLoading(true);
   document.getElementById('offlineBanner').classList.remove('show');
   const asistenteIds = state.miembrosActivos
@@ -2043,6 +2059,22 @@ function buildPwdEmail(nombre, email, pwd, cundaNombre) {
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/sw.js');
   }
+
+  // ── Indicador de conexión ──
+  function updateConnDot() {
+    const dot = document.getElementById('connDot');
+    if (!dot) return;
+    dot.classList.toggle('offline', !navigator.onLine);
+    dot.title = navigator.onLine ? 'Conectado' : 'Sin conexión';
+    if (navigator.onLine && document.getElementById('offlineBanner')?.classList.contains('show')) {
+      // Recuperó la conexión — sugiere reintentar
+      document.querySelector('.offline-banner-txt small').textContent =
+        'Conexión recuperada. Pulsa Reintentar para guardar el viaje.';
+    }
+  }
+  window.addEventListener('online',  updateConnDot);
+  window.addEventListener('offline', updateConnDot);
+  updateConnDot();
 
   // ── PWA Install Banner ──
   let _installPrompt = null;
