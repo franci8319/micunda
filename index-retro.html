@@ -376,6 +376,26 @@
     @keyframes spin { to { transform: rotate(360deg); } }
 
     .empty-msg { text-align: center; color: var(--txt-dim); font-family: 'Oswald', sans-serif; font-size: 13px; padding: 20px 0; letter-spacing: 1px; }
+
+    /* ── Selector de cunda ── */
+    .selector-screen {
+      position: fixed; inset: 0; z-index: 100000;
+      background: var(--fondo);
+      display: none; flex-direction: column;
+      align-items: center; justify-content: center; padding: 24px;
+    }
+    .selector-cunda-btn {
+      width: 100%; padding: 16px 20px;
+      background: var(--panel); border: 3px solid var(--azul);
+      font-family: 'Bebas Neue', 'Oswald', sans-serif; font-size: 20px;
+      color: var(--azul); letter-spacing: 2px; cursor: pointer;
+      box-shadow: 4px 4px 0 var(--azul-dark);
+      display: flex; align-items: center; gap: 12px;
+      transition: transform .1s, box-shadow .1s, background .1s, color .1s;
+      text-align: left;
+    }
+    .selector-cunda-btn:hover  { background: var(--azul); color: #fff; }
+    .selector-cunda-btn:active { transform: translate(2px,2px); box-shadow: 2px 2px 0 var(--azul-dark); }
   </style>
 </head>
 <body>
@@ -442,6 +462,15 @@
       <button class="login-btn" onclick="doCrearCunda()">Crear cunda</button>
     </div>
   </div>
+</div>
+
+<!-- SELECTOR DE CUNDA (email en varias cundas) -->
+<div id="selectorCundaScreen" class="selector-screen">
+  <img src="icons/icon_retro.png" style="width:72px;height:72px;image-rendering:pixelated;margin-bottom:14px">
+  <div style="font-family:'Bebas Neue','Oswald',sans-serif;font-size:34px;color:var(--azul);letter-spacing:3px;margin-bottom:4px">¿En qué cunda entras?</div>
+  <div style="font-family:'Oswald',sans-serif;font-size:12px;color:var(--txt-dim);letter-spacing:2px;text-transform:uppercase;margin-bottom:28px">Tu email está en varias cundas</div>
+  <div id="selectorCundaLista" style="width:100%;max-width:360px;display:flex;flex-direction:column;gap:10px"></div>
+  <button onclick="volverAlLogin()" style="margin-top:22px;background:none;border:none;font-family:'Oswald',sans-serif;font-size:13px;color:var(--txt-dim);cursor:pointer;letter-spacing:1px;text-transform:uppercase">← Volver</button>
 </div>
 
 <!-- ════════════════════════════════════
@@ -795,39 +824,77 @@ async function doLogin() {
 
   showLoading(true);
   try {
-    const { data: miembro } = await db.rpc('login_by_email', {
+    const { data: miembros } = await db.rpc('login_by_email', {
       p_email:    email,
       p_password: password
     });
 
-    if (!miembro?.length) {
+    if (!miembros?.length) {
       errEl.textContent = 'Email o contraseña incorrectos';
       return;
     }
 
-    const { data: cunda } = await db
-      .from('cundas')
-      .select('id, nombre')
-      .eq('id', miembro[0].cunda_id)
-      .single();
-
-    session = {
-      miembroId:     miembro[0].id,
-      nombre:        miembro[0].nombre,
-      rol:           miembro[0].rol,
-      cundaId:       miembro[0].cunda_id,
-      cundaNombre:   cunda.nombre,
-      incorporadoAt: miembro[0].incorporado_at
-    };
-    localStorage.setItem('mcSession', JSON.stringify(session));
-    await iniciarApp();
-    checkPrimerLogin();
+    if (miembros.length === 1) {
+      await completarLogin(miembros[0]);
+    } else {
+      const cundaIds = miembros.map(m => m.cunda_id);
+      const { data: cundas } = await db.from('cundas').select('id, nombre').in('id', cundaIds);
+      showLoading(false);
+      mostrarSelectorCunda(miembros, cundas || []);
+    }
   } catch (err) {
     console.error(err);
     errEl.textContent = 'Error de conexión';
   } finally {
     showLoading(false);
   }
+}
+
+let _selectorMiembros = [];
+let _selectorCundaMap = {};
+
+function mostrarSelectorCunda(miembros, cundas) {
+  _selectorMiembros = miembros;
+  _selectorCundaMap = Object.fromEntries(cundas.map(c => [c.id, c.nombre]));
+  const lista = document.getElementById('selectorCundaLista');
+  lista.innerHTML = miembros.map(m => `
+    <button class="selector-cunda-btn" onclick="elegirCunda('${m.id}')">
+      <i class="bi bi-people-fill"></i>
+      ${_selectorCundaMap[m.cunda_id] || '—'}
+    </button>`).join('');
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('selectorCundaScreen').style.display = 'flex';
+}
+
+async function elegirCunda(miembroId) {
+  const m = _selectorMiembros.find(x => x.id === miembroId);
+  if (!m) return;
+  document.getElementById('selectorCundaScreen').style.display = 'none';
+  showLoading(true);
+  await completarLogin(m, _selectorCundaMap[m.cunda_id]);
+}
+
+function volverAlLogin() {
+  document.getElementById('selectorCundaScreen').style.display = 'none';
+  document.getElementById('loginScreen').style.display = 'flex';
+}
+
+async function completarLogin(miembro, cundaNombre) {
+  if (!cundaNombre) {
+    const { data: cunda } = await db.from('cundas').select('nombre').eq('id', miembro.cunda_id).single();
+    cundaNombre = cunda?.nombre || '';
+  }
+  session = {
+    miembroId:     miembro.id,
+    nombre:        miembro.nombre,
+    rol:           miembro.rol,
+    cundaId:       miembro.cunda_id,
+    cundaNombre,
+    incorporadoAt: miembro.incorporado_at
+  };
+  localStorage.setItem('mcSession', JSON.stringify(session));
+  await iniciarApp();
+  checkPrimerLogin();
 }
 
 async function doCrearCunda() {
