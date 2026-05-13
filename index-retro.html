@@ -1,0 +1,1873 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>miCunda</title>
+  <link rel="icon" type="image/png" href="icons/icon_retro.png">
+  <link rel="manifest" href="manifest-retro.json">
+  <link rel="apple-touch-icon" href="icons/icon_retro.png">
+  <meta name="theme-color" content="#1a4a8a">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="miCunda">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=VT323&family=Oswald:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* ══════════════════════════════════════
+       MICUNDA — METAL SLUG 24-BIT THEME
+    ══════════════════════════════════════ */
+    :root {
+      --azul:      #1a4a8a;
+      --azul-dark: #0D3A70;
+      --naranja:   #D4520A;
+      --verde:     #3A7A1A;
+      --rojo:      #C41E1E;
+      --fondo:     #EDE8DF;
+      --panel:     #F5F0E8;
+      --panel2:    #E8E2D8;
+      --gold:      #B8860B;
+      --gold-lt:   #D4A017;
+      --metal:     #7A8A9A;
+      --txt:       #1A1208;
+      --txt-dim:   #6A5A3A;
+      --border:    #B8A888;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+
+    body {
+      background: var(--fondo);
+      font-family: 'Oswald', sans-serif;
+      color: var(--txt);
+      margin: 0; min-height: 100dvh;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* ── Login ── */
+    .login-screen {
+      position: fixed; inset: 0;
+      background: var(--fondo);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      z-index: 99999; padding: 24px;
+    }
+    .login-logo {
+      width: 96px; height: 96px;
+      image-rendering: pixelated;
+      margin-bottom: 12px;
+      display: block;
+    }
+    .login-title {
+      font-family: 'Bebas Neue', 'Oswald', sans-serif;
+      color: var(--azul); font-size: 46px; margin-bottom: 2px; line-height: 1;
+      letter-spacing: 4px;
+    }
+    .login-sub { color: var(--txt-dim); font-family: 'Oswald', sans-serif; font-size: 12px; margin-bottom: 28px; letter-spacing: 2px; text-transform: uppercase; }
+    .login-card {
+      background: var(--panel);
+      border: 3px solid var(--azul);
+      box-shadow: 5px 5px 0 var(--azul-dark);
+      padding: 22px 20px 18px; width: 100%; max-width: 360px;
+    }
+    .login-tabs { display: flex; gap: 0; margin-bottom: 20px; background: var(--panel2); border: 2px solid var(--border); padding: 2px; }
+    .login-tab {
+      flex: 1; padding: 8px; border: none;
+      font-family: 'Oswald', sans-serif; font-size: 13px; cursor: pointer; font-weight: 600;
+      background: none; color: var(--txt-dim); letter-spacing: 1px; text-transform: uppercase;
+    }
+    .login-tab.active { background: var(--azul); color: #fff; }
+    .login-field { margin-bottom: 12px; }
+    .login-label { font-family: 'Oswald', sans-serif; font-size: 12px; color: var(--azul); display: block; margin-bottom: 7px; letter-spacing: 1px; text-transform: uppercase; font-weight: 600; }
+    .login-input {
+      width: 100%; padding: 10px 12px;
+      border: 2px solid var(--border); background: #fff;
+      font-family: 'Oswald', sans-serif; font-size: 15px; color: var(--txt);
+    }
+    .login-input:focus { border-color: var(--azul); outline: none; box-shadow: 3px 3px 0 rgba(26,74,138,.2); }
+    .login-error { font-family: 'Oswald', sans-serif; font-size: 13px; color: var(--rojo); min-height: 16px; margin-bottom: 8px; }
+    .login-btn {
+      width: 100%; padding: 13px;
+      background: var(--azul); color: #fff;
+      font-family: 'Bebas Neue', 'Oswald', sans-serif; font-size: 24px; font-weight: 700;
+      border: none; cursor: pointer; letter-spacing: 4px;
+      box-shadow: 4px 4px 0 var(--azul-dark);
+      transition: transform .1s, box-shadow .1s;
+    }
+    .login-btn:active { transform: translate(2px,2px); box-shadow: 2px 2px 0 var(--azul-dark); }
+
+    /* ── App header ── */
+    .app-header {
+      background: var(--azul);
+      color: #fff; padding: 10px 16px;
+      border-bottom: 4px solid var(--azul-dark);
+      box-shadow: 0 3px 0 var(--gold);
+      position: sticky; top: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .hdr-left   { display: flex; align-items: center; gap: 10px; }
+    .hdr-title  { font-family: 'Bebas Neue', 'Oswald', sans-serif; font-size: 24px; color: #fff; line-height: 1.1; letter-spacing: 3px; }
+    .hdr-sub    { font-family: 'Oswald', sans-serif; font-size: 11px; color: rgba(255,255,255,.75); margin-top: 2px; letter-spacing: 1px; }
+    .hdr-logout {
+      background: none; border: 2px solid rgba(255,255,255,.4); color: rgba(255,255,255,.85);
+      padding: 6px 10px; font-family: 'Oswald', sans-serif; font-size: 12px;
+      cursor: pointer; display: flex; align-items: center; gap: 4px;
+      letter-spacing: 1px; text-transform: uppercase;
+    }
+    .hdr-logout:hover { border-color: #fff; color: #fff; }
+
+    /* ── Banner instalar PWA ── */
+    .install-banner {
+      background: var(--gold); border-bottom: 3px solid var(--azul-dark);
+      padding: 9px 14px; display: flex; align-items: center; gap: 10px;
+    }
+    .install-banner-text { flex: 1; font-family: 'Oswald', sans-serif; font-size: 13px; color: #fff; line-height: 1.5; font-weight: 600; letter-spacing: .5px; }
+    .install-banner-text span { font-family: 'Oswald', sans-serif; font-size: 11px; color: rgba(255,255,255,.85); display: block; margin-top: 2px; font-weight: 400; }
+    .install-btn {
+      background: var(--azul); color: #fff; border: none;
+      padding: 8px 14px; font-family: 'Oswald', sans-serif; font-size: 13px; font-weight: 700;
+      cursor: pointer; box-shadow: 3px 3px 0 var(--azul-dark); white-space: nowrap; letter-spacing: 1px; text-transform: uppercase;
+    }
+    .install-dismiss { background: none; border: none; color: rgba(255,255,255,.8); font-size: 20px; cursor: pointer; line-height: 1; padding: 2px 4px; }
+
+    /* ── Nav ── */
+    .app-nav {
+      background: var(--panel); display: flex;
+      border-bottom: 3px solid var(--border);
+      position: sticky; top: var(--nav-top, 55px); z-index: 99;
+    }
+    .app-nav-btn {
+      flex: 1; background: none; border: none;
+      border-bottom: 4px solid transparent;
+      padding: 10px 0 8px; font-family: 'Oswald', sans-serif; font-size: 11px;
+      color: var(--txt-dim); cursor: pointer;
+      transition: color .15s, border-color .15s; line-height: 1;
+      letter-spacing: 1px; text-transform: uppercase; font-weight: 600;
+    }
+    .app-nav-btn i      { font-size: 17px; display: block; margin-bottom: 5px; }
+    .app-nav-btn.active { color: var(--azul); border-bottom-color: var(--naranja); }
+
+    /* ── Tabs ── */
+    .tab-panel        { display: none; padding: 14px 12px 80px; }
+    .tab-panel.active { display: block; }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--panel);
+      border: 2px solid var(--border);
+      box-shadow: 4px 4px 0 rgba(0,0,0,.12);
+      padding: 14px 16px; margin-bottom: 14px;
+    }
+    .card-title {
+      font-family: 'Bebas Neue', 'Oswald', sans-serif; font-size: 18px;
+      color: var(--azul); margin-bottom: 12px;
+      letter-spacing: 2px; text-transform: uppercase;
+      border-bottom: 2px solid var(--border); padding-bottom: 8px;
+    }
+
+    /* ── Suggestion ── */
+    .suggestion-card {
+      background: var(--azul);
+      color: #fff; border: 3px solid var(--azul-dark);
+      padding: 14px 16px 12px; margin-bottom: 14px;
+      box-shadow: 5px 5px 0 var(--azul-dark);
+    }
+    .suggestion-label { font-family: 'Oswald', sans-serif; font-size: 11px; color: rgba(255,255,255,.7); letter-spacing: 2px; text-transform: uppercase; }
+    .suggestion-name  { font-family: 'Bebas Neue', 'Oswald', sans-serif; font-size: 38px; color: #fff; margin: 4px 0; line-height: 1; letter-spacing: 2px; }
+    .suggestion-sub   { font-family: 'Oswald', sans-serif; font-size: 12px; color: rgba(255,255,255,.75); }
+
+    /* ── Attendance ── */
+    .att-row {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 0; border-bottom: 1px solid var(--border); cursor: pointer;
+    }
+    .att-row:last-child { border-bottom: none; }
+    .att-row input[type="checkbox"] {
+      width: 20px; height: 20px; accent-color: var(--azul); flex-shrink: 0; cursor: pointer;
+    }
+    .att-label { font-family: 'Oswald', sans-serif; font-size: 16px; color: var(--txt); cursor: pointer; user-select: none; }
+
+    /* ── Driver buttons ── */
+    .driver-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .driver-btn {
+      border: 3px solid var(--azul);
+      padding: 14px 10px 12px; color: #fff;
+      font-family: 'Bebas Neue', 'Oswald', sans-serif; font-size: 15px; letter-spacing: 2px;
+      cursor: pointer; display: flex; flex-direction: column;
+      align-items: center; gap: 6px; min-height: 80px; justify-content: center;
+      transition: transform .1s, box-shadow .1s, opacity .2s;
+      background: var(--azul);
+      box-shadow: 4px 4px 0 var(--azul-dark);
+      text-transform: uppercase;
+      -webkit-user-select: none; user-select: none;
+    }
+    .driver-btn:active:not(:disabled) { transform: translate(2px,2px); box-shadow: 2px 2px 0 var(--azul-dark); }
+    .driver-btn:disabled { opacity: .3; cursor: not-allowed; box-shadow: none !important; }
+    .driver-btn.suggested {
+      background: var(--naranja); border-color: var(--naranja);
+      box-shadow: 4px 4px 0 #7A2A00;
+      animation: pulse-gold .8s ease-in-out infinite;
+    }
+    @keyframes pulse-gold { 0%,100% { box-shadow: 4px 4px 0 #7A2A00; } 50% { box-shadow: 4px 4px 0 var(--gold), 0 0 12px rgba(212,82,10,.35); } }
+    .btn-viajes { font-family: 'VT323', monospace; font-size: 17px; opacity: .85; }
+
+    /* ── History ── */
+    .history-row {
+      display: flex; align-items: flex-start; gap: 10px;
+      padding: 10px 0; border-bottom: 1px solid var(--border);
+    }
+    .history-row:last-child { border-bottom: none; }
+    .history-icon { font-size: 18px; color: var(--azul); flex-shrink: 0; margin-top: 2px; }
+    .history-cond { font-family: 'Oswald', sans-serif; font-weight: 600; font-size: 16px; color: var(--txt); }
+    .history-meta { font-family: 'Oswald', sans-serif; font-size: 12px; color: var(--txt-dim); margin-top: 2px; }
+    .history-audit{ font-size: 10px; color: var(--metal); margin-top: 3px; font-style: italic; }
+    .history-actions { display: flex; gap: 4px; margin-left: auto; flex-shrink: 0; align-self: center; }
+    .action-btn {
+      background: none; border: 2px solid var(--border); cursor: pointer;
+      padding: 6px; color: var(--txt-dim);
+      font-size: 14px; transition: color .15s, border-color .15s;
+      display: flex; align-items: center; line-height: 1;
+    }
+    .action-btn.edit:hover { color: var(--azul); border-color: var(--azul); }
+    .action-btn.del:hover  { color: var(--rojo);  border-color: var(--rojo); }
+
+    /* ── Cuadrante ── */
+    .cuadrante-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .cq-table { border-collapse: collapse; }
+    .cq-th-name {
+      position: sticky; left: 0; z-index: 3;
+      background: var(--azul); color: #fff;
+      font-family: 'Bebas Neue', 'Oswald', sans-serif; font-size: 13px; letter-spacing: 2px;
+      padding: 8px 12px; text-align: left; white-space: nowrap;
+      border-right: 3px solid var(--azul-dark);
+    }
+    .cq-th-trip {
+      background: var(--panel2); color: var(--txt-dim);
+      font-family: 'Oswald', sans-serif; font-size: 10px; font-weight: 600;
+      padding: 5px 4px; text-align: center;
+      min-width: 38px; max-width: 38px;
+      border-right: 1px solid var(--border); border-bottom: 2px solid var(--border);
+      line-height: 1.3; text-transform: uppercase;
+    }
+    .cq-th-trip span { display: block; color: var(--metal); font-size: 8px; }
+    .cq-td-name {
+      position: sticky; left: 0; z-index: 2;
+      background: var(--panel); border-right: 2px solid var(--border);
+      font-family: 'Oswald', sans-serif; font-size: 14px; font-weight: 600; color: var(--txt);
+      padding: 0 12px; white-space: nowrap;
+      border-bottom: 1px solid var(--border); height: 48px;
+    }
+    .cq-count { font-family: 'VT323', monospace; font-size: 17px; color: var(--azul); margin-left: 6px; }
+    .cq-cell {
+      width: 38px; min-width: 38px; height: 48px;
+      text-align: center; vertical-align: middle;
+      border-right: 1px solid var(--border); border-bottom: 1px solid var(--border);
+    }
+    .cq-cell.hit { background: rgba(26,74,138,.08); }
+    .cq-check { color: var(--verde); font-size: 16px; display: block; line-height: 1; }
+    .cq-date  { color: var(--txt-dim); font-size: 7px; font-weight: 600; display: block; margin-top: 2px; }
+    .cq-block-sep    { border-top: 2px solid var(--border); margin-top: 4px; }
+    .cq-block-header {
+      font-family: 'Oswald', sans-serif; font-size: 11px; color: var(--txt-dim);
+      letter-spacing: 2px; padding: 10px 14px 6px;
+      display: flex; align-items: center; gap: 7px; text-transform: uppercase;
+    }
+    .cq-block-dot { width: 7px; height: 7px; background: var(--naranja); flex-shrink: 0; }
+    .cq-table tr:last-child .cq-cell,
+    .cq-table tr:last-child .cq-td-name { border-bottom: none; }
+
+    /* ── Admin ── */
+    .member-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 11px 0; border-bottom: 1px solid var(--border);
+    }
+    .member-row:last-child { border-bottom: none; }
+    .member-avatar {
+      width: 36px; height: 36px;
+      background: var(--azul); color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Bebas Neue', 'Oswald', sans-serif; font-size: 16px; font-weight: 700; flex-shrink: 0;
+      box-shadow: 3px 3px 0 var(--azul-dark);
+    }
+    .member-name { font-family: 'Oswald', sans-serif; font-weight: 600; font-size: 15px; color: var(--txt); }
+    .member-user { font-family: 'Oswald', sans-serif; font-size: 12px; color: var(--txt-dim); }
+    .role-badge {
+      font-family: 'Oswald', sans-serif; font-size: 11px; font-weight: 700; padding: 3px 8px;
+      margin-left: auto; flex-shrink: 0; letter-spacing: 1px; text-transform: uppercase;
+    }
+    .role-badge.admin  { background: var(--naranja); color: #fff; box-shadow: 2px 2px 0 #7A2A00; }
+    .role-badge.editor { background: var(--azul);    color: #fff; box-shadow: 2px 2px 0 var(--azul-dark); }
+    .incorp-date { font-size: 10px; color: var(--metal); }
+
+    /* ── Modals ── */
+    .modal-backdrop {
+      position: fixed; inset: 0; background: rgba(0,0,0,.55);
+      z-index: 8000; display: flex; align-items: flex-end;
+      justify-content: center; padding-bottom: 20px;
+    }
+    .modal-sheet {
+      background: var(--panel);
+      border: 3px solid var(--azul);
+      box-shadow: 6px 6px 0 var(--azul-dark);
+      padding: 20px 20px 16px; width: min(400px, 95vw);
+      animation: slideUp .2s ease;
+    }
+    .modal-center { align-items: center; }
+    @keyframes slideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    .modal-title { font-family: 'Bebas Neue', 'Oswald', sans-serif; font-size: 22px; color: var(--azul); margin-bottom: 12px; letter-spacing: 2px; }
+    .modal-text  { font-family: 'Oswald', sans-serif; font-size: 15px; color: var(--txt); margin-bottom: 18px; line-height: 1.6; }
+    .modal-btns  { display: flex; gap: 10px; }
+    .modal-btns button {
+      flex: 1; padding: 12px;
+      font-family: 'Bebas Neue', 'Oswald', sans-serif; font-size: 20px; font-weight: 700;
+      border: none; cursor: pointer; letter-spacing: 2px;
+      transition: transform .1s, box-shadow .1s;
+    }
+    .modal-btns button:active { transform: translate(2px,2px); }
+    .btn-cancel  { background: var(--panel2); color: var(--txt-dim); border: 2px solid var(--border); box-shadow: 3px 3px 0 rgba(0,0,0,.12); }
+    .btn-confirm { background: var(--azul); color: #fff; box-shadow: 3px 3px 0 var(--azul-dark); }
+    .btn-danger  { background: var(--rojo); color: #fff; box-shadow: 3px 3px 0 #880022; }
+    .form-field  { margin-bottom: 12px; }
+    .form-label  { font-family: 'Oswald', sans-serif; font-size: 12px; color: var(--azul); display: block; margin-bottom: 7px; letter-spacing: 1px; text-transform: uppercase; font-weight: 600; }
+    .form-input  {
+      width: 100%; padding: 10px 12px;
+      border: 2px solid var(--border); background: #fff;
+      font-family: 'Oswald', sans-serif; font-size: 15px; color: var(--txt);
+    }
+    .form-input:focus { border-color: var(--azul); outline: none; box-shadow: 3px 3px 0 rgba(26,74,138,.2); }
+    .form-select {
+      width: 100%; padding: 10px 12px;
+      border: 2px solid var(--border); background: #fff;
+      font-family: 'Oswald', sans-serif; font-size: 15px; color: var(--txt);
+    }
+
+    /* ── Toast ── */
+    .toast-wrap {
+      position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%);
+      z-index: 9999; pointer-events: none;
+    }
+    .toast-msg {
+      background: var(--panel); color: var(--txt);
+      border: 2px solid var(--border);
+      padding: 10px 20px;
+      font-family: 'Oswald', sans-serif; font-size: 14px; letter-spacing: 1px;
+      box-shadow: 4px 4px 0 rgba(0,0,0,.18);
+      white-space: nowrap; opacity: 0; transition: opacity .25s;
+    }
+    .toast-msg.show { opacity: 1; }
+    .toast-msg.ok   { background: #EAF5E8; border-color: var(--verde); color: var(--verde); box-shadow: 4px 4px 0 rgba(0,0,0,.12); }
+    .toast-msg.err  { background: #F5E8E8; border-color: var(--rojo);  color: var(--rojo);  box-shadow: 4px 4px 0 rgba(0,0,0,.12); }
+
+    /* ── Loading ── */
+    .loading-overlay {
+      position: fixed; inset: 0;
+      background: rgba(237,232,223,.92);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 16px; z-index: 9000;
+    }
+    .loading-overlay p { font-family: 'Bebas Neue', 'Oswald', sans-serif; font-size: 20px; color: var(--azul); margin: 0; letter-spacing: 4px; animation: blink .8s step-end infinite; }
+    @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0; } }
+    .spinner {
+      width: 36px; height: 36px;
+      border: 4px solid var(--border); border-top-color: var(--azul);
+      animation: spin .7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .empty-msg { text-align: center; color: var(--txt-dim); font-family: 'Oswald', sans-serif; font-size: 13px; padding: 20px 0; letter-spacing: 1px; }
+  </style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div id="loadingOverlay" class="loading-overlay" style="display:none">
+  <div class="spinner"></div>
+  <p>Cargando…</p>
+</div>
+
+<!-- ════════════════════════════════════
+     LOGIN SCREEN
+════════════════════════════════════ -->
+<div id="loginScreen" class="login-screen">
+  <img class="login-logo" src="icons/icon_retro.png" alt="miCunda">
+  <div class="login-title">miCunda</div>
+  <div class="login-sub">Gestión de viajes compartidos</div>
+
+  <div class="login-card">
+    <div class="login-tabs">
+      <button class="login-tab active" onclick="switchLoginTab('entrar')">Entrar</button>
+      <button class="login-tab" onclick="switchLoginTab('crear')">Crear mi cunda</button>
+    </div>
+
+    <!-- ENTRAR -->
+    <div id="loginEntrar">
+      <div class="login-field">
+        <label class="login-label">Email</label>
+        <input type="email" id="loginEmail" class="login-input" placeholder="tu@email.com"
+               autocomplete="email">
+      </div>
+      <div class="login-field">
+        <label class="login-label">Contraseña</label>
+        <input type="password" id="loginPassword" class="login-input" placeholder="••••••••"
+               autocomplete="current-password"
+               onkeydown="if(event.key==='Enter') doLogin()">
+      </div>
+      <div id="loginError" class="login-error"></div>
+      <button class="login-btn" onclick="doLogin()">Entrar</button>
+    </div>
+
+    <!-- CREAR -->
+    <div id="loginCrear" style="display:none">
+      <div class="login-field">
+        <label class="login-label">Nombre de la cunda</label>
+        <input type="text" id="crearNombreCunda" class="login-input" placeholder="Ej: Cunda del trabajo">
+      </div>
+      <div class="login-field">
+        <label class="login-label">Tu nombre <small style="color:#999;font-weight:400">(como aparecerá en el cuadrante)</small></label>
+        <input type="text" id="crearNombre" class="login-input" placeholder="Ej: Francis">
+      </div>
+      <div class="login-field">
+        <label class="login-label">Email</label>
+        <input type="email" id="crearEmail" class="login-input" placeholder="tu@email.com"
+               autocomplete="email">
+      </div>
+      <div class="login-field">
+        <label class="login-label">Contraseña</label>
+        <input type="password" id="crearPassword" class="login-input" placeholder="••••••••"
+               autocomplete="new-password"
+               onkeydown="if(event.key==='Enter') doCrearCunda()">
+      </div>
+      <div id="crearError" class="login-error"></div>
+      <button class="login-btn" onclick="doCrearCunda()">Crear cunda</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════
+     APP SCREEN
+════════════════════════════════════ -->
+<div id="appScreen" style="display:none">
+
+  <!-- CABECERA -->
+  <header class="app-header">
+    <div class="hdr-left">
+      <img src="icons/icon_retro.png" alt="" style="width:34px;height:34px;image-rendering:pixelated">
+      <div>
+        <div id="hdrCunda" class="hdr-title">miCunda</div>
+        <div id="hdrUser"  class="hdr-sub">—</div>
+      </div>
+    </div>
+    <button class="hdr-logout" onclick="doLogout()">
+      <i class="bi bi-box-arrow-right"></i> Salir
+    </button>
+  </header>
+
+  <!-- BANNER: INSTALAR PWA -->
+  <div id="installBanner" class="install-banner" style="display:none">
+    <div class="install-banner-text">
+      📲 Instalar miCunda
+      <span>Accede más rápido desde tu escritorio</span>
+    </div>
+    <button class="install-btn" onclick="doInstallPWA()">Instalar</button>
+    <button class="install-dismiss" onclick="dismissInstallBanner()" title="Cerrar">×</button>
+  </div>
+
+  <!-- NAV -->
+  <nav class="app-nav" id="appNav">
+    <button class="app-nav-btn active" data-tab="tabRegistro" onclick="switchTab('tabRegistro')">
+      <i class="bi bi-plus-circle-fill"></i>Registro
+    </button>
+    <button class="app-nav-btn" data-tab="tabCuadrante" onclick="switchTab('tabCuadrante')">
+      <i class="bi bi-grid-3x3-gap-fill"></i>Cuadrante
+    </button>
+    <button class="app-nav-btn" data-tab="tabHistorial" onclick="switchTab('tabHistorial')">
+      <i class="bi bi-clock-history"></i>Historial
+    </button>
+    <button class="app-nav-btn" id="navAdmin" data-tab="tabAdmin" onclick="switchTab('tabAdmin')" style="display:none">
+      <i class="bi bi-gear-fill"></i>Admin
+    </button>
+  </nav>
+
+  <!-- TAB: REGISTRO -->
+  <div id="tabRegistro" class="tab-panel active">
+    <div class="card">
+      <div class="card-title" style="font-size:15px;color:var(--azul);text-transform:none;letter-spacing:0">
+        <i class="bi bi-people-fill"></i> ¿Quién viene hoy?
+      </div>
+      <div id="attList"></div>
+    </div>
+    <div class="card">
+      <div class="card-title" style="font-size:15px;color:var(--azul);text-transform:none;letter-spacing:0">
+        <i class="bi bi-car-front-fill"></i> ¿Quién conduce hoy?
+      </div>
+      <div id="driverGrid" class="driver-grid"></div>
+    </div>
+  </div>
+
+  <!-- TAB: CUADRANTE -->
+  <div id="tabCuadrante" class="tab-panel">
+    <div class="card" style="padding:14px 0 0">
+      <div class="card-title" style="padding:0 16px 10px">
+        <i class="bi bi-grid-3x3-gap-fill"></i> Cuadrante de viajes
+      </div>
+      <div id="cuadranteContent"></div>
+    </div>
+  </div>
+
+  <!-- TAB: HISTORIAL -->
+  <div id="tabHistorial" class="tab-panel">
+    <div class="card">
+      <div class="card-title"><i class="bi bi-clock-history"></i> Historial</div>
+      <div id="historyList"></div>
+    </div>
+  </div>
+
+  <!-- TAB: ADMIN -->
+  <div id="tabAdmin" class="tab-panel">
+    <div class="card">
+      <div class="card-title"><i class="bi bi-people-fill"></i> Miembros de la cunda</div>
+      <div id="memberList"></div>
+    </div>
+    <div style="text-align:center;padding:4px 0 12px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+      <button onclick="openAddMember()"
+        style="background:var(--azul);color:#fff;border:none;border-radius:12px;padding:12px 28px;font-size:15px;font-weight:700;cursor:pointer">
+        <i class="bi bi-person-plus-fill"></i> Añadir miembro
+      </button>
+      <button onclick="openRecordarPwd()"
+        style="background:#5E35B1;color:#fff;border:none;border-radius:12px;padding:12px 28px;font-size:15px;font-weight:700;cursor:pointer">
+        <i class="bi bi-envelope-fill"></i> Recordar contraseña
+      </button>
+      <button onclick="openImportViajes()"
+        style="background:var(--verde);color:#fff;border:none;border-radius:12px;padding:12px 28px;font-size:15px;font-weight:700;cursor:pointer">
+        <i class="bi bi-clock-history"></i> Importar viajes anteriores
+      </button>
+    </div>
+  </div>
+
+</div>
+
+<!-- MODAL: IMPORTAR VIAJES ANTERIORES -->
+<div id="modalImport" class="modal-backdrop modal-center" style="display:none" onclick="closeModal('modalImport',event)">
+  <div class="modal-sheet" onclick="event.stopPropagation()" style="max-height:90dvh;overflow-y:auto">
+    <div class="modal-title"><i class="bi bi-clock-history"></i> Importar viajes anteriores</div>
+    <div id="importContador" style="font-size:13px;color:var(--verde);font-weight:600;margin-bottom:14px;min-height:18px"></div>
+    <div class="form-field">
+      <label class="form-label">Fecha</label>
+      <input type="date" id="importFecha" class="form-input">
+    </div>
+    <div class="form-field">
+      <label class="form-label">Conductor</label>
+      <select id="importConductor" class="form-select"></select>
+    </div>
+    <div class="form-field">
+      <label class="form-label">¿Quién vino?</label>
+      <div id="importAttList"></div>
+    </div>
+    <div id="importError" class="login-error"></div>
+    <div class="modal-btns" style="margin-top:12px">
+      <button class="btn-cancel" onclick="closeModal('modalImport')">Cerrar</button>
+      <button class="btn-confirm" onclick="saveImportViaje()">
+        <i class="bi bi-plus-circle"></i> Guardar y añadir otro
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: CONFIRMAR VIAJE -->
+<div id="modalViaje" class="modal-backdrop" style="display:none" onclick="closeModal('modalViaje',event)">
+  <div class="modal-sheet" onclick="event.stopPropagation()">
+    <div class="modal-title">Confirmar viaje</div>
+    <div id="modalViajeText" class="modal-text"></div>
+    <div class="modal-btns">
+      <button class="btn-cancel"  onclick="closeModal('modalViaje')">Cancelar</button>
+      <button class="btn-confirm" id="modalViajeConfirm">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: CONFIRMAR BORRAR -->
+<div id="modalBorrar" class="modal-backdrop" style="display:none" onclick="closeModal('modalBorrar',event)">
+  <div class="modal-sheet" onclick="event.stopPropagation()">
+    <div class="modal-title">Eliminar viaje</div>
+    <div class="modal-text">¿Eliminar este viaje? <strong style="color:var(--rojo)">Quedará registrado quién lo eliminó.</strong></div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal('modalBorrar')">Cancelar</button>
+      <button class="btn-danger" id="modalBorrarConfirm">Eliminar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: EDITAR VIAJE -->
+<div id="modalEditar" class="modal-backdrop modal-center" style="display:none" onclick="closeModal('modalEditar',event)">
+  <div class="modal-sheet" onclick="event.stopPropagation()" style="max-height:90dvh;overflow-y:auto">
+    <div class="modal-title"><i class="bi bi-pencil-square"></i> Editar viaje</div>
+    <div class="form-field">
+      <label class="form-label">Fecha</label>
+      <input type="date" id="editFecha" class="form-input">
+    </div>
+    <div class="form-field">
+      <label class="form-label">Conductor</label>
+      <select id="editConductor" class="form-select"></select>
+    </div>
+    <div class="form-field">
+      <label class="form-label">Asistentes</label>
+      <div id="editAttList"></div>
+    </div>
+    <div class="modal-btns" style="margin-top:16px">
+      <button class="btn-cancel" onclick="closeModal('modalEditar')">Cancelar</button>
+      <button class="btn-confirm" onclick="saveEdit()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: AÑADIR MIEMBRO -->
+<div id="modalMiembro" class="modal-backdrop modal-center" style="display:none" onclick="closeModal('modalMiembro',event)">
+  <div class="modal-sheet" onclick="event.stopPropagation()" style="max-height:90dvh;overflow-y:auto">
+    <div class="modal-title"><i class="bi bi-person-plus-fill"></i> Añadir miembro</div>
+    <div class="form-field">
+      <label class="form-label">Nombre <small style="color:#999;font-weight:400">(como aparecerá en el cuadrante)</small></label>
+      <input type="text" id="nuevoNombre" class="form-input" placeholder="Ej: María">
+    </div>
+    <div class="form-field">
+      <label class="form-label">Email</label>
+      <input type="email" id="nuevoEmail" class="form-input" placeholder="su@email.com">
+    </div>
+    <div class="form-field">
+      <label class="form-label">Contraseña</label>
+      <input type="password" id="nuevoPassword" class="form-input" placeholder="••••••••">
+    </div>
+    <div class="form-field">
+      <label class="form-label">Rol</label>
+      <select id="nuevoRol" class="form-select">
+        <option value="editor">Editor</option>
+        <option value="admin">Administrador</option>
+      </select>
+    </div>
+    <div class="form-field">
+      <label class="form-label">Fecha de incorporación</label>
+      <input type="date" id="nuevoIncorporado" class="form-input">
+    </div>
+    <div id="miembroError" class="login-error"></div>
+    <div class="modal-btns" style="margin-top:4px">
+      <button class="btn-cancel" onclick="closeModal('modalMiembro')">Cancelar</button>
+      <button class="btn-confirm" onclick="saveNuevoMiembro()">Añadir</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: RECORDAR CONTRASEÑA (admin) -->
+<div id="modalRecordarPwd" class="modal-backdrop modal-center" style="display:none" onclick="closeModal('modalRecordarPwd',event)">
+  <div class="modal-sheet" onclick="event.stopPropagation()" style="max-height:90dvh;overflow-y:auto">
+    <div class="modal-title"><i class="bi bi-envelope-fill"></i> Enviar contraseña</div>
+    <div class="form-field">
+      <label class="form-label">Miembro</label>
+      <select id="recorMiembro" class="form-select"></select>
+    </div>
+    <div class="form-field">
+      <label class="form-label">Nueva contraseña <small style="color:#999;font-weight:400">(se actualizará y se enviará por email)</small></label>
+      <input type="text" id="recorPwd" class="form-input" placeholder="Escribe la nueva contraseña">
+    </div>
+    <div id="recorError" class="login-error"></div>
+    <div class="modal-btns" style="margin-top:4px">
+      <button class="btn-cancel" onclick="closeModal('modalRecordarPwd')">Cancelar</button>
+      <button class="btn-confirm" onclick="sendRecordarPwd()"><i class="bi bi-envelope-fill"></i> Enviar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: CAMBIAR CONTRASEÑA (primer login) -->
+<div id="modalCambiarPwd" class="modal-backdrop modal-center" style="display:none">
+  <div class="modal-sheet" onclick="event.stopPropagation()" style="max-height:90dvh;overflow-y:auto">
+    <div class="modal-title">🔐 Tu contraseña</div>
+    <p style="font-size:13px;color:#555;margin:0 0 16px">Tu contraseña actual es la que te asignó el administrador.<br>¿Quieres cambiarla ahora?</p>
+    <div id="pwdFormSection" style="display:none">
+      <div class="form-field">
+        <label class="form-label">Nueva contraseña</label>
+        <input type="password" id="pwdNueva" class="form-input" placeholder="Mínimo 6 caracteres">
+      </div>
+      <div class="form-field">
+        <label class="form-label">Confirmar contraseña</label>
+        <input type="password" id="pwdConfirm" class="form-input" placeholder="Repite la contraseña">
+      </div>
+      <div id="pwdErr" class="login-error"></div>
+    </div>
+    <div id="pwdBtnsInitial" class="modal-btns">
+      <button class="btn-cancel" onclick="skipPwdChange()">No, continuar</button>
+      <button class="btn-confirm" onclick="showPwdForm()">Sí, cambiar</button>
+    </div>
+    <div id="pwdBtnsForm" class="modal-btns" style="display:none">
+      <button class="btn-cancel" onclick="skipPwdChange()">Cancelar</button>
+      <button class="btn-confirm" onclick="savePwdChange()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: OCULTAR BLOQUE CUADRANTE -->
+<div id="modalOcultarGrupo" class="modal-backdrop" style="display:none" onclick="closeModal('modalOcultarGrupo',event)">
+  <div class="modal-sheet" onclick="event.stopPropagation()">
+    <div class="modal-title">Ocultar cuadrante</div>
+    <div class="modal-text">¿Ocultar el cuadrante <strong id="modalOcultarLabel"></strong>? Desaparecerá de la vista principal pero todos podrán verlo en "Ver cuadrantes ocultos".</div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal('modalOcultarGrupo')">Cancelar</button>
+      <button class="btn-danger" onclick="ocultarGrupo()">Ocultar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: ELIMINAR MIEMBRO -->
+<div id="modalEliminarMiembro" class="modal-backdrop" style="display:none" onclick="closeModal('modalEliminarMiembro',event)">
+  <div class="modal-sheet" onclick="event.stopPropagation()">
+    <div class="modal-title">Eliminar miembro</div>
+    <div class="modal-text">¿Eliminar a <strong id="modalEliminarNombre"></strong> de la cunda? Sus viajes anteriores se conservarán en el historial.</div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal('modalEliminarMiembro')">Cancelar</button>
+      <button class="btn-danger" onclick="confirmarEliminarMiembro()">Eliminar</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast-wrap">
+  <div id="toastMsg" class="toast-msg"></div>
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL = 'https://kjjdsfhtlqhatxyoljyg.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_5uv675tO624msA1B8L-rrw_1ktVk27p';
+const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ── Sesión y estado ──
+let session = null; // { miembroId, nombre, rol, cundaId, cundaNombre, incorporadoAt }
+let state   = { miembros: [], viajes: [], attendance: {} };
+let _editingViajeId    = null;
+let _eliminarMiembroId = null;
+
+// ════════════════════════════════════
+//  AUTH
+// ════════════════════════════════════
+function switchLoginTab(tab) {
+  document.getElementById('loginEntrar').style.display = tab === 'entrar' ? 'block' : 'none';
+  document.getElementById('loginCrear').style.display  = tab === 'crear'  ? 'block' : 'none';
+  document.querySelectorAll('.login-tab').forEach((b, i) => {
+    b.classList.toggle('active', (tab === 'entrar') ? i === 0 : i === 1);
+  });
+}
+
+async function doLogin() {
+  const email    = document.getElementById('loginEmail').value.trim().toLowerCase();
+  const password = document.getElementById('loginPassword').value;
+  const errEl    = document.getElementById('loginError');
+  errEl.textContent = '';
+
+  if (!email || !password) {
+    errEl.textContent = 'Rellena todos los campos';
+    return;
+  }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    errEl.textContent = 'El email no es válido';
+    return;
+  }
+
+  showLoading(true);
+  try {
+    const { data: miembro } = await db.rpc('login_by_email', {
+      p_email:    email,
+      p_password: password
+    });
+
+    if (!miembro?.length) {
+      errEl.textContent = 'Email o contraseña incorrectos';
+      return;
+    }
+
+    const { data: cunda } = await db
+      .from('cundas')
+      .select('id, nombre')
+      .eq('id', miembro[0].cunda_id)
+      .single();
+
+    session = {
+      miembroId:     miembro[0].id,
+      nombre:        miembro[0].nombre,
+      rol:           miembro[0].rol,
+      cundaId:       miembro[0].cunda_id,
+      cundaNombre:   cunda.nombre,
+      incorporadoAt: miembro[0].incorporado_at
+    };
+    localStorage.setItem('mcSession', JSON.stringify(session));
+    await iniciarApp();
+    checkPrimerLogin();
+  } catch (err) {
+    console.error(err);
+    errEl.textContent = 'Error de conexión';
+  } finally {
+    showLoading(false);
+  }
+}
+
+async function doCrearCunda() {
+  const nombreCunda = document.getElementById('crearNombreCunda').value.trim();
+  const nombre      = document.getElementById('crearNombre').value.trim();
+  const email       = document.getElementById('crearEmail').value.trim().toLowerCase();
+  const password    = document.getElementById('crearPassword').value;
+  const errEl       = document.getElementById('crearError');
+  errEl.textContent = '';
+
+  if (!nombreCunda || !nombre || !email || !password) {
+    errEl.textContent = 'Rellena todos los campos';
+    return;
+  }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    errEl.textContent = 'El email no es válido';
+    return;
+  }
+  if (password.length < 4) {
+    errEl.textContent = 'La contraseña debe tener al menos 4 caracteres';
+    return;
+  }
+
+  showLoading(true);
+  try {
+    const { data: cundaId, error } = await db.rpc('crear_cunda', {
+      p_nombre_cunda:   nombreCunda,
+      p_nombre_admin:   nombre,
+      p_email_admin:    email,
+      p_password_admin: password
+    });
+
+    if (error) throw error;
+
+    // Login automático
+    const { data: miembro } = await db.rpc('login', {
+      p_cunda_id: cundaId,
+      p_email:    email,
+      p_password: password
+    });
+
+    session = {
+      miembroId:     miembro[0].id,
+      nombre:        miembro[0].nombre,
+      rol:           miembro[0].rol,
+      cundaId:       cundaId,
+      cundaNombre:   nombreCunda,
+      incorporadoAt: miembro[0].incorporado_at
+    };
+    localStorage.setItem('mcSession', JSON.stringify(session));
+    await iniciarApp();
+  } catch (err) {
+    console.error(err);
+    errEl.textContent = 'Error al crear la cunda';
+  } finally {
+    showLoading(false);
+  }
+}
+
+function doLogout() {
+  localStorage.removeItem('mcSession');
+  session = null;
+  state   = { miembros: [], viajes: [], attendance: {} };
+  document.getElementById('appScreen').style.display   = 'none';
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('loginPassword').value = '';
+  document.getElementById('loginError').textContent = '';
+}
+
+// ════════════════════════════════════
+//  INICIO DE APP
+// ════════════════════════════════════
+async function iniciarApp() {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('appScreen').style.display   = 'block';
+
+  document.getElementById('hdrCunda').textContent = session.cundaNombre;
+  document.getElementById('hdrUser').textContent  = session.nombre + (session.rol === 'admin' ? ' · Admin' : '');
+
+  // Mostrar tab admin si corresponde
+  document.getElementById('navAdmin').style.display = session.rol === 'admin' ? '' : 'none';
+
+  showLoading(true);
+  try {
+    await loadAll();
+    renderRegistro();
+    renderCuadrante();
+    renderHistorial();
+    if (session.rol === 'admin') renderAdmin();
+  } finally {
+    showLoading(false);
+  }
+}
+
+
+// ════════════════════════════════════
+//  DATOS
+// ════════════════════════════════════
+async function loadAll() {
+  const [{ data: miembros }, { data: viajes }, { data: ocultos }] = await Promise.all([
+    db.from('miembros')
+      .select('id, nombre, rol, incorporado_at, email, deleted_at')
+      .eq('cunda_id', session.cundaId)
+      .order('incorporado_at', { ascending: true }),
+    db.from('viajes')
+      .select('*')
+      .eq('cunda_id', session.cundaId)
+      .is('deleted_at', null)
+      .order('fecha', { ascending: true })
+      .order('created_at', { ascending: true }),
+    db.from('grupos_ocultos')
+      .select('grupo_key')
+      .eq('cunda_id', session.cundaId)
+  ]);
+
+  state.miembros        = miembros || [];
+  state.miembrosActivos = (miembros || []).filter(m => !m.deleted_at);
+  state.viajes          = (viajes || []).filter(v => v.fecha >= session.incorporadoAt);
+  state.gruposOcultos   = new Set((ocultos || []).map(o => o.grupo_key));
+}
+
+async function reloadAll() {
+  showLoading(true);
+  try {
+    await loadAll();
+    renderRegistro();
+    renderCuadrante();
+    renderHistorial(true);
+    if (session.rol === 'admin') renderAdmin();
+  } finally {
+    showLoading(false);
+  }
+}
+
+// ════════════════════════════════════
+//  HELPERS
+// ════════════════════════════════════
+function nombreMiembro(id) {
+  const m = state.miembros.find(m => m.id === id);
+  return m ? m.nombre : '?';
+}
+
+function isoToDisplay(iso) {
+  if (!iso) return '';
+  const [y, m, d] = iso.split('-');
+  return `${d}/${m}/${y}`;
+}
+
+function grupoKey(conductorId, asistentes) {
+  const todos = [conductorId, ...(asistentes || [])].filter(Boolean);
+  return [...new Set(todos)].sort().join(',');
+}
+
+function grupoKeyActual() {
+  return [...state.miembrosActivos]
+    .filter(m => state.attendance[m.id])
+    .map(m => m.id)
+    .sort()
+    .join(',');
+}
+
+// ════════════════════════════════════
+//  RENDER: REGISTRO
+// ════════════════════════════════════
+function renderRegistro() {
+  renderAttendance();
+  renderDriverButtons();
+  updateDriverCruces();
+}
+
+function renderAttendance() {
+  const cont = document.getElementById('attList');
+  cont.innerHTML = '';
+  state.miembrosActivos.forEach(m => {
+    // Por defecto todos marcados como presentes
+    if (state.attendance[m.id] === undefined) state.attendance[m.id] = true;
+    const row = document.createElement('label');
+    row.className = 'att-row';
+    row.innerHTML = `
+      <input type="checkbox" id="att_${m.id}" ${state.attendance[m.id] ? 'checked' : ''}
+             onchange="onAttChange('${m.id}', this.checked)">
+      <span class="att-label">${m.nombre}</span>
+    `;
+    cont.appendChild(row);
+  });
+}
+
+function onAttChange(id, presente) {
+  state.attendance[id] = presente;
+  const btn = document.getElementById(`dBtn_${id}`);
+  if (btn) btn.disabled = !presente;
+  updateDriverCruces();
+}
+
+function renderDriverButtons() {
+  const grid = document.getElementById('driverGrid');
+  grid.innerHTML = '';
+  state.miembrosActivos.forEach(m => {
+    const col = document.createElement('div');
+    col.innerHTML = `
+      <button id="dBtn_${m.id}" class="driver-btn" ${!state.attendance[m.id] ? 'disabled' : ''}
+              onclick="onDriverClick('${m.id}')">
+        <span>${m.nombre.split(' ')[0].toUpperCase()}</span>
+        <span class="btn-viajes" id="cru_${m.id}">0 viajes</span>
+      </button>
+    `;
+    grid.appendChild(col);
+  });
+}
+
+function updateDriverCruces() {
+  const key = grupoKeyActual();
+  const counts = {};
+  state.miembrosActivos.forEach(m => { counts[m.id] = 0; });
+
+  state.viajes.forEach(v => {
+    const k = grupoKey(v.conductor_id, v.asistentes);
+    if (k === key && counts.hasOwnProperty(v.conductor_id)) counts[v.conductor_id]++;
+  });
+
+  state.miembrosActivos.forEach(m => {
+    const el = document.getElementById(`cru_${m.id}`);
+    if (el) {
+      const c = counts[m.id];
+      el.textContent = `${c} ${c === 1 ? 'viaje' : 'viajes'}`;
+    }
+  });
+
+  updateSuggestion(key, counts);
+}
+
+function updateSuggestion(key, counts) {
+  state.miembros.forEach(m => {
+    const b = document.getElementById(`dBtn_${m.id}`);
+    if (b) b.classList.remove('suggested');
+  });
+
+  const presentes = state.miembrosActivos.filter(m => state.attendance[m.id]);
+  if (presentes.length < 2) return;
+
+  const sugerido = [...presentes].sort((a, b) => (counts[a.id] || 0) - (counts[b.id] || 0))[0];
+  const btn = document.getElementById(`dBtn_${sugerido.id}`);
+  if (btn && !btn.disabled) btn.classList.add('suggested');
+}
+
+// ════════════════════════════════════
+//  REGISTRAR VIAJE
+// ════════════════════════════════════
+function onDriverClick(conductorId) {
+  const nombre  = nombreMiembro(conductorId);
+  const counts  = {};
+  const key     = grupoKeyActual();
+  state.miembros.forEach(m => { counts[m.id] = 0; });
+  state.viajes.forEach(v => {
+    if (grupoKey(v.conductor_id, v.asistentes) === key && counts.hasOwnProperty(v.conductor_id))
+      counts[v.conductor_id]++;
+  });
+  const despues = (counts[conductorId] || 0) + 1;
+
+  document.getElementById('modalViajeText').innerHTML =
+    `¿Registrar <strong>1 viaje</strong> para <strong>${nombre}</strong>?<br>` +
+    `<small style="color:#888">Acumulado en este grupo: ${despues} ${despues===1?'viaje':'viajes'}</small>`;
+  document.getElementById('modalViajeConfirm').onclick = () => {
+    closeModal('modalViaje');
+    registrarViaje(conductorId);
+  };
+  document.getElementById('modalViaje').style.display = 'flex';
+}
+
+async function registrarViaje(conductorId) {
+  showLoading(true);
+  const asistenteIds = state.miembrosActivos
+    .filter(m => state.attendance[m.id] && m.id !== conductorId)
+    .map(m => m.id);
+
+  try {
+    const hoy = new Date();
+    const fecha = `${hoy.getFullYear()}-${String(hoy.getMonth()+1).padStart(2,'0')}-${String(hoy.getDate()).padStart(2,'0')}`;
+    const { error } = await db.from('viajes').insert({
+      cunda_id:     session.cundaId,
+      fecha,
+      conductor_id: conductorId,
+      asistentes:   asistenteIds,
+      created_by:   session.miembroId
+    });
+    if (error) throw error;
+    showToast(`✓ Viaje registrado para ${nombreMiembro(conductorId)}`, 'ok');
+    await reloadAll();
+  } catch (err) {
+    showToast('Error al registrar el viaje', 'err');
+    console.error(err);
+    showLoading(false);
+  }
+}
+
+
+// ════════════════════════════════════
+//  RENDER: CUADRANTE
+// ════════════════════════════════════
+function buildGroups(viajes) {
+  const groups = {};
+  viajes.forEach(v => {
+    const k = grupoKey(v.conductor_id, v.asistentes);
+    if (!groups[k]) {
+      const mg = [v.conductor_id, ...(v.asistentes || [])]
+        .map(id => state.miembros.find(m => m.id === id))
+        .filter(Boolean)
+        .sort((a, b) => a.nombre.localeCompare(b.nombre));
+      groups[k] = { miembros: mg, trips: [] };
+    }
+    groups[k].trips.push(v);
+  });
+  return groups;
+}
+
+function buildGrupoHTML(key, grupo, canHide) {
+  const label = grupo.miembros.map(m => m.nombre.split(' ')[0]).join(' · ');
+  const btnOcultar = canHide
+    ? `<button onclick="confirmarOcultarGrupo('${key}','${label.replace(/'/g, "\\'")}')" title="Ocultar"
+         style="margin-left:auto;background:none;border:none;cursor:pointer;color:#CCC;font-size:14px;padding:2px 6px;border-radius:6px;line-height:1"
+         onmouseover="this.style.color='#C62828';this.style.background='#FFEBEE'"
+         onmouseout="this.style.color='#CCC';this.style.background='none'">
+         <i class="bi bi-trash"></i></button>`
+    : '';
+  let h = `<div class="cq-block-header"><span class="cq-block-dot"></span>${label}${btnOcultar}</div>`;
+  h += `<div class="cuadrante-scroll"><table class="cq-table"><thead><tr><th class="cq-th-name"></th>`;
+  grupo.trips.forEach((v, i) => {
+    const [,mo,d] = v.fecha.split('-');
+    h += `<th class="cq-th-trip">${i+1}<span>${d}/${mo}</span></th>`;
+  });
+  h += `</tr></thead><tbody>`;
+  grupo.miembros.forEach(mb => {
+    const cnt  = grupo.trips.filter(v => v.conductor_id === mb.id).length;
+    const nom  = mb.deleted_at
+      ? `<span style="text-decoration:line-through;color:#aaa">${mb.nombre.split(' ')[0]}</span>`
+      : mb.nombre.split(' ')[0];
+    h += `<tr><td class="cq-td-name">${nom}${cnt > 0 ? `<span class="cq-count">(${cnt})</span>` : ''}</td>`;
+    grupo.trips.forEach(v => {
+      if (v.conductor_id === mb.id) {
+        const [,mo,d] = v.fecha.split('-');
+        h += `<td class="cq-cell hit"><i class="bi bi-check-lg cq-check"></i><span class="cq-date">${d}/${mo}</span></td>`;
+      } else { h += `<td class="cq-cell"></td>`; }
+    });
+    h += `</tr>`;
+  });
+  h += `</tbody></table></div>`;
+  return h;
+}
+
+function renderCuadrante() {
+  const cont = document.getElementById('cuadranteContent');
+  cont.innerHTML = '';
+
+  // Mis viajes (usuario logueado)
+  const misViajes = state.viajes.filter(v =>
+    v.conductor_id === session.miembroId ||
+    (v.asistentes || []).includes(session.miembroId)
+  );
+
+  // Todos los grupos (para admin)
+  const todosGroups = buildGroups(state.viajes);
+  const misGroups   = buildGroups(misViajes);
+
+  if (!misViajes.length && session.rol !== 'admin') {
+    cont.innerHTML = '<p class="empty-msg">Aún no hay viajes registrados.</p>';
+    return;
+  }
+
+  let html = '';
+  let blockIdx = 0;
+
+  // Mis bloques
+  Object.entries(misGroups).forEach(([key, grupo]) => {
+    if (state.gruposOcultos.has(key)) return;
+    const sep = blockIdx > 0 ? ' cq-block-sep' : '';
+    html += `<div class="cq-block${sep}">${buildGrupoHTML(key, grupo, session.rol === 'admin')}</div>`;
+    blockIdx++;
+  });
+
+  if (blockIdx === 0) html += '<p class="empty-msg">Aún no hay viajes registrados.</p>';
+
+  // Sección admin: cuadrantes de otros miembros
+  if (session.rol === 'admin') {
+    const otrosEntries = Object.entries(todosGroups).filter(
+      ([key]) => !misGroups[key] && !state.gruposOcultos.has(key)
+    );
+    if (otrosEntries.length) {
+      html += `
+        <div style="margin-top:16px;border-top:1px solid #EEF2F7;padding-top:14px;text-align:center">
+          <button onclick="toggleSection('otrosContent','iconOtros')"
+            style="background:none;border:none;cursor:pointer;font-size:13px;color:#888;font-weight:600;display:inline-flex;align-items:center;gap:6px;padding:4px 12px 10px">
+            <i class="bi bi-people" id="iconOtros"></i>
+            Ver cuadrantes de otros miembros (${otrosEntries.length})
+          </button>
+          <div id="otrosContent" style="display:none;text-align:left">`;
+      otrosEntries.forEach(([key, grupo], i) => {
+        const sep = i > 0 ? ' cq-block-sep' : '';
+        html += `<div class="cq-block${sep}">${buildGrupoHTML(key, grupo, true)}</div>`;
+      });
+      html += `</div></div>`;
+    }
+  }
+
+  // Sección cuadrantes eliminados (todos los usuarios)
+  const eliminados = Object.entries(todosGroups).filter(([key]) => state.gruposOcultos.has(key));
+  if (eliminados.length) {
+    html += `
+      <div style="margin-top:16px;border-top:1px solid #EEF2F7;padding-top:14px;text-align:center">
+        <button onclick="toggleSection('eliminadosContent','iconEliminados')"
+          style="background:none;border:none;cursor:pointer;font-size:13px;color:#AAA;font-weight:600;display:inline-flex;align-items:center;gap:6px;padding:4px 12px 10px">
+          <i class="bi bi-eye-slash" id="iconEliminados"></i>
+          Ver cuadrantes eliminados (${eliminados.length})
+        </button>
+        <div id="eliminadosContent" style="display:none;text-align:left">`;
+    eliminados.forEach(([key, grupo]) => {
+      const labelEl    = grupo.miembros.map(m => m.nombre.split(' ')[0]).join(' · ');
+      const btnRestaur = session.rol === 'admin'
+        ? `<button onclick="restaurarGrupo('${key}')"
+             style="margin-left:auto;background:none;border:none;cursor:pointer;color:#BBB;font-size:13px;padding:2px 6px;border-radius:6px"
+             onmouseover="this.style.color='#2E7D32';this.style.background='#E8F5E9'"
+             onmouseout="this.style.color='#BBB';this.style.background='none'">
+             <i class="bi bi-eye"></i> Restaurar</button>`
+        : '';
+      html += `<div style="opacity:.55;margin-bottom:16px">`;
+      html += `<div class="cq-block-header" style="color:#BBB"><span class="cq-block-dot" style="background:#CCC"></span>${labelEl}${btnRestaur}</div>`;
+      html += `<div class="cuadrante-scroll"><table class="cq-table"><thead><tr><th class="cq-th-name" style="background:#AAA"></th>`;
+      grupo.trips.forEach((v, i) => { const [,mo,d] = v.fecha.split('-'); html += `<th class="cq-th-trip">${i+1}<span>${d}/${mo}</span></th>`; });
+      html += `</tr></thead><tbody>`;
+      grupo.miembros.forEach(mb => {
+        const cnt = grupo.trips.filter(v => v.conductor_id === mb.id).length;
+        const nom = mb.deleted_at ? `<span style="text-decoration:line-through;color:#aaa">${mb.nombre.split(' ')[0]}</span>` : mb.nombre.split(' ')[0];
+        html += `<tr><td class="cq-td-name">${nom}${cnt > 0 ? `<span class="cq-count">(${cnt})</span>` : ''}</td>`;
+        grupo.trips.forEach(v => {
+          if (v.conductor_id === mb.id) { const [,mo,d] = v.fecha.split('-'); html += `<td class="cq-cell hit"><i class="bi bi-check-lg cq-check"></i><span class="cq-date">${d}/${mo}</span></td>`; }
+          else { html += `<td class="cq-cell"></td>`; }
+        });
+        html += `</tr>`;
+      });
+      html += `</tbody></table></div></div>`;
+    });
+    html += `</div></div>`;
+  }
+
+  cont.innerHTML = html;
+}
+
+function toggleSection(contentId, iconId) {
+  const content = document.getElementById(contentId);
+  const icon    = document.getElementById(iconId);
+  if (!content) return;
+  const visible = content.style.display === 'none';
+  content.style.display = visible ? 'block' : 'none';
+  if (icon) icon.className = visible ? 'bi bi-eye' : 'bi bi-eye-slash';
+}
+
+async function restaurarGrupo(key) {
+  const { error } = await db.from('grupos_ocultos')
+    .delete()
+    .eq('cunda_id', session.cundaId)
+    .eq('grupo_key', key);
+  if (error) { showToast('Error al restaurar', 'err'); return; }
+  state.gruposOcultos.delete(key);
+  renderCuadrante();
+  showToast('Cuadrante restaurado', 'ok');
+}
+
+let _ocultarGrupoKey = null;
+
+function confirmarOcultarGrupo(key, label) {
+  _ocultarGrupoKey = key;
+  document.getElementById('modalOcultarLabel').textContent = label;
+  document.getElementById('modalOcultarGrupo').style.display = 'flex';
+}
+
+async function ocultarGrupo() {
+  closeModal('modalOcultarGrupo');
+  const { error } = await db.from('grupos_ocultos').insert({
+    cunda_id:  session.cundaId,
+    grupo_key: _ocultarGrupoKey
+  });
+  if (error) { showToast('Error al ocultar el bloque', 'err'); return; }
+  state.gruposOcultos.add(_ocultarGrupoKey);
+  renderCuadrante();
+  showToast('Bloque ocultado', 'ok');
+}
+
+// ════════════════════════════════════
+//  RENDER: HISTORIAL
+// ════════════════════════════════════
+let _historialVisible = 20;
+
+function renderHistorial(resetPage) {
+  if (resetPage) _historialVisible = 20;
+  const cont = document.getElementById('historyList');
+  cont.innerHTML = '';
+
+  const todos = [...state.viajes]
+    .filter(v =>
+      v.conductor_id === session.miembroId ||
+      (v.asistentes || []).includes(session.miembroId)
+    )
+    .reverse();
+
+  if (!todos.length) {
+    cont.innerHTML = '<p class="empty-msg">Aún no hay viajes registrados.</p>';
+    return;
+  }
+
+  const visible = todos.slice(0, _historialVisible);
+  const canEdit = session.rol === 'admin' || session.rol === 'editor';
+
+  visible.forEach(v => {
+    const asistNombres = (v.asistentes || []).map(id => nombreMiembro(id)).join(', ');
+    const registradoPor = v.created_by ? nombreMiembro(v.created_by) : '?';
+    const modificadoPor = v.updated_by ? ` · Editado por ${nombreMiembro(v.updated_by)}` : '';
+
+    const row = document.createElement('div');
+    row.className = 'history-row';
+    row.innerHTML = `
+      <i class="bi bi-car-front history-icon"></i>
+      <div style="flex:1;min-width:0">
+        <div class="history-cond">${nombreMiembro(v.conductor_id)}</div>
+        <div class="history-meta">
+          ${isoToDisplay(v.fecha)}
+          ${asistNombres ? ' · <em>' + asistNombres + '</em>' : ''}
+        </div>
+        <div class="history-audit">Registrado por ${registradoPor}${modificadoPor}</div>
+      </div>
+      ${canEdit ? `
+      <div class="history-actions">
+        <button class="action-btn edit" onclick="openEditViaje('${v.id}')" title="Editar">
+          <i class="bi bi-pencil"></i>
+        </button>
+        <button class="action-btn del" onclick="openBorrarViaje('${v.id}')" title="Eliminar">
+          <i class="bi bi-trash"></i>
+        </button>
+      </div>` : ''}
+    `;
+    cont.appendChild(row);
+  });
+
+  if (_historialVisible < todos.length) {
+    const resto = todos.length - _historialVisible;
+    const btn = document.createElement('button');
+    btn.style.cssText = 'display:block;width:100%;margin-top:12px;padding:10px;background:none;border:2px solid var(--azul);color:var(--azul);border-radius:10px;font-size:13px;font-weight:700;cursor:pointer';
+    btn.textContent = `Ver ${Math.min(resto, 20)} más (${resto} restantes)`;
+    btn.onclick = () => { _historialVisible += 20; renderHistorial(); };
+    cont.appendChild(btn);
+  } else if (todos.length > 20) {
+    const info = document.createElement('p');
+    info.style.cssText = 'text-align:center;font-size:12px;color:#aaa;margin-top:10px';
+    info.textContent = `${todos.length} viajes en total`;
+    cont.appendChild(info);
+  }
+}
+
+// ════════════════════════════════════
+//  EDITAR / BORRAR VIAJE
+// ════════════════════════════════════
+function openEditViaje(id) {
+  const v = state.viajes.find(x => String(x.id) === String(id));
+  if (!v) return;
+  _editingViajeId = id;
+
+  document.getElementById('editFecha').value = v.fecha;
+
+  const selConductor = document.getElementById('editConductor');
+  selConductor.innerHTML = state.miembros.map(m =>
+    `<option value="${m.id}" ${m.id === v.conductor_id ? 'selected' : ''}>${m.nombre}</option>`
+  ).join('');
+
+  const attCont = document.getElementById('editAttList');
+  attCont.innerHTML = '';
+  state.miembros.forEach(m => {
+    const checked = (v.asistentes || []).includes(m.id);
+    const label = document.createElement('label');
+    label.className = 'att-row';
+    label.innerHTML = `
+      <input type="checkbox" id="eAtt_${m.id}" ${checked ? 'checked' : ''}>
+      <span class="att-label">${m.nombre}</span>
+    `;
+    attCont.appendChild(label);
+  });
+
+  document.getElementById('modalEditar').style.display = 'flex';
+}
+
+async function saveEdit() {
+  const fecha      = document.getElementById('editFecha').value;
+  const conductorId = document.getElementById('editConductor').value;
+  const asistentes = state.miembros
+    .filter(m => document.getElementById(`eAtt_${m.id}`)?.checked && m.id !== conductorId)
+    .map(m => m.id);
+
+  closeModal('modalEditar');
+  showLoading(true);
+  try {
+    const { error } = await db.from('viajes').update({
+      fecha,
+      conductor_id: conductorId,
+      asistentes,
+      updated_by:   session.miembroId,
+      updated_at:   new Date().toISOString()
+    }).eq('id', _editingViajeId);
+    if (error) throw error;
+    showToast('✓ Viaje actualizado', 'ok');
+    await reloadAll();
+  } catch (err) {
+    showToast('Error al actualizar', 'err');
+    console.error(err);
+    showLoading(false);
+  }
+}
+
+function openBorrarViaje(id) {
+  _editingViajeId = id;
+  document.getElementById('modalBorrarConfirm').onclick = async () => {
+    closeModal('modalBorrar');
+    showLoading(true);
+    try {
+      const { error } = await db.from('viajes').update({
+        deleted_by: session.miembroId,
+        deleted_at: new Date().toISOString()
+      }).eq('id', _editingViajeId);
+      if (error) throw error;
+      showToast('Viaje eliminado', 'ok');
+      await reloadAll();
+    } catch (err) {
+      showToast('Error al eliminar', 'err');
+      console.error(err);
+      showLoading(false);
+    }
+  };
+  document.getElementById('modalBorrar').style.display = 'flex';
+}
+
+// ════════════════════════════════════
+//  RENDER: ADMIN
+// ════════════════════════════════════
+function renderAdmin() {
+  const cont = document.getElementById('memberList');
+  cont.innerHTML = '';
+  state.miembrosActivos.forEach(m => {
+    const inicial = m.nombre.charAt(0).toUpperCase();
+    const row = document.createElement('div');
+    row.className = 'member-row';
+    row.innerHTML = `
+      <div class="member-avatar">${inicial}</div>
+      <div style="flex:1;min-width:0">
+        <div class="member-name">${m.nombre}</div>
+        <div class="member-user">${m.email}</div>
+        <div class="incorp-date">Desde ${isoToDisplay(m.incorporado_at)}</div>
+      </div>
+      <span class="role-badge ${m.rol}">${m.rol === 'admin' ? 'Admin' : 'Editor'}</span>
+      ${m.id !== session.miembroId ? `
+      <button class="action-btn del" onclick="openEliminarMiembro('${m.id}','${m.nombre}')" title="Eliminar">
+        <i class="bi bi-person-x-fill"></i>
+      </button>` : ''}
+    `;
+    cont.appendChild(row);
+  });
+}
+
+function openEliminarMiembro(id, nombre) {
+  _eliminarMiembroId = id;
+  document.getElementById('modalEliminarNombre').textContent = nombre;
+  document.getElementById('modalEliminarMiembro').style.display = 'flex';
+}
+
+async function confirmarEliminarMiembro() {
+  closeModal('modalEliminarMiembro');
+  showLoading(true);
+  try {
+    const { error } = await db.from('miembros')
+      .update({ deleted_at: new Date().toISOString() })
+      .eq('id', _eliminarMiembroId);
+    if (error) throw error;
+    showToast('Miembro eliminado de la cunda', 'ok');
+    await reloadAll();
+  } catch (err) {
+    showToast('Error al eliminar el miembro', 'err');
+    console.error(err);
+    showLoading(false);
+  }
+}
+
+let _importCount = 0;
+
+function openImportViajes() {
+  _importCount = 0;
+  document.getElementById('importContador').textContent = '';
+  document.getElementById('importError').textContent    = '';
+
+  const hoy = new Date();
+  document.getElementById('importFecha').value =
+    `${hoy.getFullYear()}-${String(hoy.getMonth()+1).padStart(2,'0')}-${String(hoy.getDate()).padStart(2,'0')}`;
+
+  const sel = document.getElementById('importConductor');
+  sel.innerHTML = state.miembrosActivos.map(m =>
+    `<option value="${m.id}">${m.nombre}</option>`
+  ).join('');
+
+  const attCont = document.getElementById('importAttList');
+  attCont.innerHTML = '';
+  state.miembrosActivos.forEach(m => {
+    const label = document.createElement('label');
+    label.className = 'att-row';
+    label.innerHTML = `
+      <input type="checkbox" id="iAtt_${m.id}" checked>
+      <span class="att-label">${m.nombre}</span>`;
+    attCont.appendChild(label);
+  });
+
+  // Bloquear el checkbox del conductor al cambiar el select
+  sel.onchange = () => syncImportConductorCheck(sel.value);
+  syncImportConductorCheck(sel.value);
+
+  document.getElementById('modalImport').style.display = 'flex';
+}
+
+function syncImportConductorCheck(conductorId) {
+  state.miembrosActivos.forEach(m => {
+    const cb    = document.getElementById(`iAtt_${m.id}`);
+    const label = cb?.parentElement;
+    if (!cb || !label) return;
+    const existing = label.querySelector('.cond-badge');
+    if (existing) existing.remove();
+    if (m.id === conductorId) {
+      cb.checked  = true;
+      cb.disabled = true;
+      label.style.opacity = '1';
+      label.style.cursor  = 'default';
+      const badge = document.createElement('span');
+      badge.className = 'cond-badge';
+      badge.textContent = '(conductor)';
+      badge.style.cssText = 'color:#1a4a8a;font-size:11px;margin-left:6px;font-weight:600';
+      label.appendChild(badge);
+    } else {
+      cb.disabled = false;
+      label.style.opacity = '1';
+      label.style.cursor  = 'pointer';
+    }
+  });
+}
+
+async function saveImportViaje() {
+  const fecha      = document.getElementById('importFecha').value;
+  const conductorId = document.getElementById('importConductor').value;
+  const errEl      = document.getElementById('importError');
+  errEl.textContent = '';
+
+  if (!fecha) { errEl.textContent = 'Selecciona una fecha'; return; }
+
+  const asistentes = state.miembrosActivos
+    .filter(m => document.getElementById(`iAtt_${m.id}`)?.checked && m.id !== conductorId)
+    .map(m => m.id);
+
+  try {
+    const { error } = await db.from('viajes').insert({
+      cunda_id:     session.cundaId,
+      fecha,
+      conductor_id: conductorId,
+      asistentes,
+      created_by:   session.miembroId
+    });
+    if (error) throw error;
+
+    _importCount++;
+    const conductor = state.miembrosActivos.find(m => m.id === conductorId);
+    const [y, mo, d] = fecha.split('-');
+    document.getElementById('importContador').textContent =
+      `✓ ${_importCount} viaje${_importCount > 1 ? 's' : ''} importado${_importCount > 1 ? 's' : ''} · Último: ${conductor?.nombre} el ${d}/${mo}/${y}`;
+
+    // Resetear fecha un día antes para facilitar entrada secuencial
+    const dt = new Date(fecha + 'T12:00:00');
+    dt.setDate(dt.getDate() - 1);
+    document.getElementById('importFecha').value =
+      `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
+
+    await loadAll();
+    renderCuadrante();
+    renderHistorial();
+  } catch (err) {
+    errEl.textContent = 'Error al guardar el viaje';
+    console.error(err);
+  }
+}
+
+function openAddMember() {
+  const hoy = new Date();
+  document.getElementById('nuevoIncorporado').value =
+    `${hoy.getFullYear()}-${String(hoy.getMonth()+1).padStart(2,'0')}-${String(hoy.getDate()).padStart(2,'0')}`;
+  document.getElementById('nuevoNombre').value   = '';
+  document.getElementById('nuevoEmail').value    = '';
+  document.getElementById('nuevoPassword').value = '';
+  document.getElementById('nuevoRol').value      = 'editor';
+  document.getElementById('miembroError').textContent = '';
+  document.getElementById('modalMiembro').style.display = 'flex';
+}
+
+async function saveNuevoMiembro() {
+  const nombre      = document.getElementById('nuevoNombre').value.trim();
+  const email       = document.getElementById('nuevoEmail').value.trim().toLowerCase();
+  const password    = document.getElementById('nuevoPassword').value;
+  const rol         = document.getElementById('nuevoRol').value;
+  const incorporado = document.getElementById('nuevoIncorporado').value;
+  const errEl       = document.getElementById('miembroError');
+  errEl.textContent = '';
+
+  if (!nombre || !email || !password || !incorporado) {
+    errEl.textContent = 'Rellena todos los campos';
+    return;
+  }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    errEl.textContent = 'El email no es válido';
+    return;
+  }
+
+  // Nombre igual a un miembro activo → bloquear
+  const activoDuplicado = state.miembrosActivos.some(
+    m => m.nombre.toLowerCase() === nombre.toLowerCase()
+  );
+  if (activoDuplicado) {
+    errEl.textContent = `Ya hay un "${nombre}" activo en esta cunda. Usa un nombre diferente.`;
+    return;
+  }
+
+  // Nombre igual a un miembro eliminado → avisar
+  const eliminadoDuplicado = state.miembros.some(
+    m => m.deleted_at && m.nombre.toLowerCase() === nombre.toLowerCase()
+  );
+  if (eliminadoDuplicado) {
+    errEl.textContent = `El nombre "${nombre}" ya fue usado por un miembro anterior. Para evitar confusiones en el historial y el cuadrante, usa un nombre diferente (ej: "${nombre}2").`;
+    return;
+  }
+
+  closeModal('modalMiembro');
+  showLoading(true);
+  try {
+    const { error } = await db.rpc('añadir_miembro', {
+      p_cunda_id:       session.cundaId,
+      p_nombre:         nombre,
+      p_email:          email,
+      p_password:       password,
+      p_rol:            rol,
+      p_incorporado_at: incorporado,
+      p_created_by:     session.miembroId
+    });
+    if (error) throw error;
+    showToast(`✓ ${nombre} añadido a la cunda`, 'ok');
+    await reloadAll();
+  } catch (err) {
+    showToast('Error al añadir miembro', 'err');
+    console.error(err);
+    showLoading(false);
+  }
+}
+
+// ════════════════════════════════════
+//  UTILIDADES
+// ════════════════════════════════════
+function switchTab(tabId) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.app-nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(tabId).classList.add('active');
+  document.querySelector(`[data-tab="${tabId}"]`)?.classList.add('active');
+}
+
+function closeModal(id, evt) {
+  if (!evt || evt.target === document.getElementById(id))
+    document.getElementById(id).style.display = 'none';
+}
+
+function showLoading(v) {
+  document.getElementById('loadingOverlay').style.display = v ? 'flex' : 'none';
+}
+
+let _toastTimer;
+function showToast(msg, type) {
+  const el = document.getElementById('toastMsg');
+  el.textContent = msg;
+  el.className   = `toast-msg show ${type || ''}`;
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(() => el.classList.remove('show'), 3200);
+}
+
+// ════════════════════════════════════
+//  CONTRASEÑA — PRIMER LOGIN
+// ════════════════════════════════════
+function checkPrimerLogin() {
+  const key = `mcPwdPrompted_${session.miembroId}`;
+  if (localStorage.getItem(key)) return;
+  document.getElementById('pwdFormSection').style.display  = 'none';
+  document.getElementById('pwdBtnsInitial').style.display  = 'flex';
+  document.getElementById('pwdBtnsForm').style.display     = 'none';
+  document.getElementById('pwdErr').textContent            = '';
+  document.getElementById('modalCambiarPwd').style.display = 'flex';
+}
+
+function skipPwdChange() {
+  localStorage.setItem(`mcPwdPrompted_${session.miembroId}`, '1');
+  document.getElementById('modalCambiarPwd').style.display = 'none';
+}
+
+function showPwdForm() {
+  document.getElementById('pwdFormSection').style.display = 'block';
+  document.getElementById('pwdBtnsInitial').style.display = 'none';
+  document.getElementById('pwdBtnsForm').style.display    = 'flex';
+}
+
+async function savePwdChange() {
+  const nueva   = document.getElementById('pwdNueva').value;
+  const confirm = document.getElementById('pwdConfirm').value;
+  const errEl   = document.getElementById('pwdErr');
+  errEl.textContent = '';
+  if (nueva.length < 6)    { errEl.textContent = 'Mínimo 6 caracteres'; return; }
+  if (nueva !== confirm)   { errEl.textContent = 'Las contraseñas no coinciden'; return; }
+  try {
+    const { error } = await db.rpc('change_password', { p_id: session.miembroId, p_new_password: nueva });
+    if (error) throw error;
+    skipPwdChange();
+    showToast('Contraseña actualizada ✓', 'ok');
+  } catch {
+    errEl.textContent = 'Error al guardar. Inténtalo de nuevo.';
+  }
+}
+
+// ════════════════════════════════════
+//  CONTRASEÑA — ADMIN: RECORDAR
+// ════════════════════════════════════
+function openRecordarPwd() {
+  const sel = document.getElementById('recorMiembro');
+  sel.innerHTML = state.miembrosActivos
+    .filter(m => m.email)
+    .map(m => `<option value="${m.id}" data-email="${m.email}">${m.nombre}</option>`)
+    .join('');
+  document.getElementById('recorPwd').value     = '';
+  document.getElementById('recorError').textContent = '';
+  document.getElementById('modalRecordarPwd').style.display = 'flex';
+}
+
+async function sendRecordarPwd() {
+  const sel    = document.getElementById('recorMiembro');
+  const membId = sel.value;
+  const email  = sel.selectedOptions[0]?.dataset.email;
+  const nombre = sel.selectedOptions[0]?.text;
+  const pwd    = document.getElementById('recorPwd').value.trim();
+  const errEl  = document.getElementById('recorError');
+  errEl.textContent = '';
+  if (!pwd)            { errEl.textContent = 'Escribe una contraseña'; return; }
+  if (pwd.length < 4)  { errEl.textContent = 'Mínimo 4 caracteres'; return; }
+  if (!email)          { errEl.textContent = 'Este miembro no tiene email asignado'; return; }
+  try {
+    const { error } = await db.rpc('change_password', { p_id: membId, p_new_password: pwd });
+    if (error) throw error;
+    const res = await fetch('/api/send-email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        to:           email,
+        subject:      '🚗 Tus datos de acceso — miCunda',
+        html:         buildPwdEmail(nombre, email, pwd, session.cundaNombre),
+        tipo:         'contrasena',
+        cunda_nombre: session.cundaNombre
+      })
+    });
+    if (!res.ok) throw new Error('email_fail');
+    closeModal('modalRecordarPwd');
+    showToast(`Email enviado a ${nombre} ✓`, 'ok');
+  } catch {
+    errEl.textContent = 'Error al enviar. Inténtalo de nuevo.';
+  }
+}
+
+function buildPwdEmail(nombre, email, pwd, cundaNombre) {
+  return `<!DOCTYPE html>
+<html lang="es">
+<body style="margin:0;padding:0;background:#ECEFF1;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
+<div style="max-width:480px;margin:0 auto;padding:20px">
+  <div style="background:#1a4a8a;padding:20px 24px;border-radius:12px 12px 0 0;text-align:center">
+    <div style="font-size:30px">🚗</div>
+    <h1 style="color:#fff;margin:6px 0 2px;font-size:21px;font-weight:800">miCunda</h1>
+    <p style="color:rgba(255,255,255,.7);margin:0;font-size:13px">${cundaNombre}</p>
+  </div>
+  <div style="background:#fff;padding:24px;border-radius:0 0 12px 12px;border:1px solid #e0e0e0;border-top:none">
+    <p style="font-size:14px;color:#333;margin:0 0 18px">Hola <strong>${nombre}</strong>, aquí tienes tus datos de acceso a miCunda:</p>
+    <div style="background:#F8FAFC;border-radius:8px;padding:16px;margin-bottom:18px">
+      <div style="font-size:12px;color:#888;margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">Email</div>
+      <div style="font-size:15px;font-weight:700;color:#333;margin-bottom:14px">${email}</div>
+      <div style="font-size:12px;color:#888;margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">Contraseña</div>
+      <div style="font-size:18px;font-weight:800;color:#1a4a8a;letter-spacing:1px">${pwd}</div>
+    </div>
+    <p style="font-size:13px;color:#888;margin:0 0 4px">Accede en <a href="https://micunda.es" style="color:#1a4a8a;font-weight:700;text-decoration:none">micunda.es</a></p>
+    <p style="font-size:11px;color:#bbb;margin:8px 0 0">Te recomendamos cambiar la contraseña la primera vez que entres.</p>
+  </div>
+</div>
+</body>
+</html>`;
+}
+
+// ════════════════════════════════════
+//  ARRANQUE
+// ════════════════════════════════════
+(async () => {
+  const stored = localStorage.getItem('mcSession');
+  if (stored) {
+    try {
+      session = JSON.parse(stored);
+      await iniciarApp();
+    } catch {
+      doLogout();
+    }
+  }
+})();
+</script>
+
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js');
+  }
+
+  // ── PWA Install Banner ──
+  let _installPrompt = null;
+
+  window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault();
+    _installPrompt = e;
+    if (!localStorage.getItem('mcInstallDismissed')) {
+      const banner = document.getElementById('installBanner');
+      if (banner) {
+        banner.style.display = 'flex';
+        document.documentElement.style.setProperty('--nav-top', (59 + banner.offsetHeight) + 'px');
+      }
+    }
+  });
+
+  window.addEventListener('appinstalled', () => {
+    _installPrompt = null;
+    hideBanner();
+  });
+
+  function hideBanner() {
+    const banner = document.getElementById('installBanner');
+    if (banner) banner.style.display = 'none';
+    document.documentElement.style.setProperty('--nav-top', '59px');
+  }
+
+  function dismissInstallBanner() {
+    localStorage.setItem('mcInstallDismissed', '1');
+    hideBanner();
+  }
+
+  async function doInstallPWA() {
+    if (!_installPrompt) return;
+    _installPrompt.prompt();
+    const { outcome } = await _installPrompt.userChoice;
+    if (outcome === 'accepted') {
+      _installPrompt = null;
+      hideBanner();
+    }
+  }
+</script>
+
+</body>
+</html>

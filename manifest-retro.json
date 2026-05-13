@@ -1,0 +1,23 @@
+{
+  "name": "miCunda",
+  "short_name": "miCunda",
+  "description": "Gestiona los turnos de conducción de tu cunda",
+  "start_url": "/index-retro.html",
+  "display": "standalone",
+  "background_color": "#EDE8DF",
+  "theme_color": "#1a4a8a",
+  "icons": [
+    {
+      "src": "/icons/icon_retro.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon_retro.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
