@@ -781,6 +781,13 @@
       <label class="form-label">Nueva contraseña <span style="font-weight:400;font-size:11px;opacity:.7">(vacío = no cambiar)</span></label>
       <input type="password" id="modalEditarPwd" class="form-input" placeholder="••••••••">
     </div>
+    <div class="form-field" id="modalEditarRolField">
+      <label class="form-label">Rol</label>
+      <select id="modalEditarRol" class="form-input" style="font-family:'Oswald',sans-serif">
+        <option value="admin">Admin</option>
+        <option value="editor">Editor</option>
+      </select>
+    </div>
     <div id="modalEditarErr" style="font-family:'Oswald',sans-serif;font-size:13px;color:var(--rojo);min-height:16px;margin-bottom:8px"></div>
     <div class="modal-btns">
       <button class="btn-cancel" onclick="closeModal('modalEditarMiembro')">Cancelar</button>
@@ -1567,9 +1574,6 @@ function renderAdmin() {
         <i class="bi bi-pencil-fill"></i>
       </button>
       ${m.id !== session.miembroId ? `
-      <button class="action-btn edit" onclick="openCambiarRol('${m.id}','${m.nombre}','${m.rol}')" title="Cambiar rol" style="color:var(--gold)">
-        <i class="bi bi-shield-fill"></i>
-      </button>
       <button class="action-btn del" onclick="openEliminarMiembro('${m.id}','${m.nombre}')" title="Eliminar">
         <i class="bi bi-person-x-fill"></i>
       </button>` : ''}
@@ -1632,6 +1636,14 @@ function openEditarMiembro(id) {
   document.getElementById('modalEditarEmail').value = m.email || '';
   document.getElementById('modalEditarPwd').value = '';
   document.getElementById('modalEditarErr').textContent = '';
+  const rolField = document.getElementById('modalEditarRolField');
+  const rolSel   = document.getElementById('modalEditarRol');
+  if (id === session.miembroId) {
+    rolField.style.display = 'none';
+  } else {
+    rolField.style.display = '';
+    rolSel.value = m.rol;
+  }
   document.getElementById('modalEditarMiembro').style.display = 'flex';
 }
 
@@ -1641,10 +1653,14 @@ async function guardarEditarMiembro() {
   const errEl = document.getElementById('modalEditarErr');
   errEl.textContent = '';
   if (!email) { errEl.textContent = 'El email no puede estar vacío'; return; }
+  const rolField  = document.getElementById('modalEditarRolField');
+  const nuevoRol  = rolField.style.display !== 'none' ? document.getElementById('modalEditarRol').value : null;
   closeModal('modalEditarMiembro');
   showLoading(true);
   try {
-    const { error: eErr } = await db.from('miembros').update({ email }).eq('id', _editarMiembroId);
+    const update = { email };
+    if (nuevoRol) update.rol = nuevoRol;
+    const { error: eErr } = await db.from('miembros').update(update).eq('id', _editarMiembroId);
     if (eErr) throw eErr;
     if (pwd) {
       const { error: pErr } = await db.rpc('change_password', { p_id: _editarMiembroId, p_new_password: pwd });
