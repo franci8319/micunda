@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>miCunda — Manual de usuario</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Oswald:wght@400;600;700&family=VT323&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --azul:    #1a4a8a;
+    --azul-dk: #0d2f5e;
+    --naranja: #D4520A;
+    --fondo:   #EDE8DF;
+    --panel:   #fff;
+    --border:  #B8A888;
+    --gold:    #B8860B;
+    --txt:     #1A1208;
+    --txt-dim: #6B5E4E;
+    --verde:   #2E7D32;
+    --rojo:    #B71C1C;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--fondo);
+    color: var(--txt);
+    font-family: 'Oswald', sans-serif;
+    font-size: 14px;
+    line-height: 1.65;
+  }
+
+  @media print {
+    .no-print { display: none !important; }
+    body { font-size: 12px; background: #fff; }
+    .cover { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .section-banner { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .card { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    h2 { page-break-before: always; }
+    h2.no-break { page-break-before: avoid; }
+    .card, .faq-item { page-break-inside: avoid; }
+  }
+
+  /* ── Portada ── */
+  .cover {
+    background: var(--azul);
+    border-bottom: 4px solid var(--naranja);
+    padding: 50px 48px 44px;
+    display: flex; align-items: center; gap: 28px;
+  }
+  .cover img { width: 88px; height: 88px; image-rendering: pixelated; flex-shrink: 0; }
+  .cover h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 52px; letter-spacing: 6px;
+    color: #fff; line-height: 1;
+  }
+  .cover .sub { font-size: 14px; color: #a8c4f0; margin-top: 6px; letter-spacing: 1px; }
+  .cover .version { font-size: 11px; color: rgba(255,255,255,.4); margin-top: 16px; font-family: 'VT323', monospace; font-size: 16px; letter-spacing: 2px; }
+
+  /* ── Layout ── */
+  .content { max-width: 760px; margin: 0 auto; padding: 36px 48px 72px; }
+
+  /* ── Títulos ── */
+  h2 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px; letter-spacing: 3px;
+    color: var(--azul);
+    margin: 36px 0 14px;
+    padding-bottom: 7px;
+    border-bottom: 3px solid var(--azul);
+    display: flex; align-items: center; gap: 10px;
+  }
+  h2.no-break { margin-top: 20px; }
+  h3 {
+    font-size: 14px; font-weight: 700;
+    color: var(--txt); margin: 18px 0 8px;
+    display: flex; align-items: center; gap: 6px;
+    text-transform: uppercase; letter-spacing: 1px;
+  }
+  p { margin-bottom: 10px; }
+
+  /* ── Banner de sección ── */
+  .section-banner {
+    margin: 40px 0 0;
+    background: var(--azul);
+    color: #fff;
+    padding: 14px 20px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 20px; letter-spacing: 3px;
+    border-left: 6px solid var(--naranja);
+    box-shadow: 4px 4px 0 var(--azul-dk);
+  }
+
+  /* ── Cards ── */
+  .card {
+    background: var(--panel);
+    border: 2px solid var(--border);
+    border-left: 5px solid var(--azul);
+    padding: 12px 16px;
+    margin: 12px 0;
+    box-shadow: 3px 3px 0 rgba(0,0,0,.08);
+  }
+  .card.green  { border-left-color: var(--verde);   background: #F1F8F1; }
+  .card.orange { border-left-color: var(--naranja);  background: #FFF8F2; }
+  .card.red    { border-left-color: var(--rojo);    background: #FFF1F1; }
+
+  /* ── Listas ── */
+  ol, ul { padding-left: 20px; margin-bottom: 10px; }
+  li { margin-bottom: 5px; }
+  ol li::marker { font-weight: 700; color: var(--azul); }
+
+  /* ── Badges de rol ── */
+  .badge {
+    display: inline-block; font-size: 10px; font-weight: 700;
+    padding: 2px 8px; vertical-align: middle; margin-left: 5px;
+    border: 1.5px solid currentColor; letter-spacing: 1px;
+  }
+  .badge.admin  { color: var(--naranja); background: #FFF3E0; }
+  .badge.editor { color: var(--azul);   background: #EEF4FF; }
+
+  /* ── Indicador de conexión (ilustración) ── */
+  .conn-demo {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--panel); border: 2px solid var(--border);
+    padding: 4px 10px; font-size: 12px; margin: 4px 0;
+  }
+  .dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+  .dot.verde  { background: #2ECC40; }
+  .dot.rojo   { background: #E53935; }
+
+  /* ── Tabla de atajos ── */
+  table { width: 100%; border-collapse: collapse; margin: 10px 0; }
+  th { background: var(--azul); color: #fff; font-family: 'Bebas Neue'; letter-spacing: 2px; padding: 8px 12px; text-align: left; font-size: 13px; }
+  td { border-bottom: 1px solid var(--border); padding: 7px 12px; vertical-align: top; background: var(--panel); }
+  tr:last-child td { border-bottom: none; }
+
+  /* ── FAQ ── */
+  .faq-item { margin-bottom: 14px; }
+  .faq-q { font-weight: 700; color: var(--azul); margin-bottom: 3px; letter-spacing: .3px; }
+  .faq-a { color: var(--txt-dim); }
+
+  /* ── Footer ── */
+  .footer {
+    margin-top: 52px;
+    border-top: 2px solid var(--border);
+    padding-top: 16px;
+    font-size: 12px; color: #aaa; text-align: center;
+    font-family: 'VT323', monospace; font-size: 16px; letter-spacing: 2px;
+  }
+
+  /* ── Botón imprimir ── */
+  .print-btn {
+    position: fixed; bottom: 24px; right: 24px;
+    background: var(--naranja); color: #fff;
+    border: none; padding: 12px 22px;
+    font-family: 'Bebas Neue', sans-serif; font-size: 16px; letter-spacing: 2px;
+    cursor: pointer; box-shadow: 4px 4px 0 #8B3000;
+  }
+  .print-btn:hover { background: #8B3000; }
+
+  code {
+    background: #EEF2F7; padding: 1px 6px;
+    font-size: 12px; font-family: monospace;
+    border: 1px solid var(--border);
+  }
+</style>
+</head>
+<body>
+
+<!-- PORTADA -->
+<div class="cover">
+  <img src="icons/icon_retro.png" alt="miCunda">
+  <div>
+    <h1>miCunda</h1>
+    <div class="sub">Manual de usuario · Guía completa para administradores y miembros</div>
+    <div class="version">VERSION 2.0 · MICUNDA.ES</div>
+  </div>
+</div>
+
+<div class="content">
+
+  <!-- QUÉ ES -->
+  <h2 class="no-break">¿Qué es miCunda?</h2>
+  <p>
+    <strong>miCunda</strong> es una app para grupos de personas que comparten coche para ir al trabajo.
+    Registra quién conduce cada día, lleva la cuenta automáticamente y sugiere a quién le toca conducir
+    para que el reparto sea siempre justo.
+  </p>
+  <p>Cada grupo es una <strong>cunda</strong>. Hay dos tipos de usuario:</p>
+  <ul>
+    <li><strong>Administrador</strong> <span class="badge admin">Admin</span> — Gestiona la cunda, los miembros y tiene acceso completo.</li>
+    <li><strong>Editor</strong> <span class="badge editor">Editor</span> — Puede registrar y editar viajes. Es el rol habitual.</li>
+  </ul>
+  <div class="card green">
+    💡 La app es <strong>gratuita y sin publicidad</strong>. Funciona en cualquier navegador moderno y puede instalarse en el móvil como si fuera una app nativa.
+  </div>
+
+  <!-- ══════════════════════════════════════ -->
+  <div class="section-banner">📱 Guía para todos los miembros</div>
+
+  <!-- ACCESO -->
+  <h2 class="no-break">Acceder a la app</h2>
+  <ol>
+    <li>Abre <strong>micunda.es</strong> en el navegador del móvil (Chrome recomendado en Android)</li>
+    <li>Escribe tu <strong>email</strong> y <strong>contraseña</strong> (te los facilita el administrador)</li>
+    <li>Pulsa <strong>Entrar</strong></li>
+  </ol>
+  <div class="card green">
+    💡 <strong>Instalar como app en Android:</strong> Chrome → menú (⋮) → <em>"Añadir a pantalla de inicio"</em>. La app aparecerá como si fuera nativa, sin barra del navegador, y se puede usar igual que una app descargada.
+  </div>
+  <div class="card">
+    ℹ️ <strong>Si perteneces a varias cundas con el mismo email</strong>, al pulsar Entrar aparecerá una pantalla para elegir a cuál acceder.
+  </div>
+  <div class="card orange">
+    🔒 La sesión se mantiene activa aunque cierres el navegador o apagues el móvil. Solo se cierra al pulsar <strong>Salir</strong> explícitamente.
+  </div>
+
+  <!-- INDICADOR CONEXIÓN -->
+  <h2>Indicador de conexión</h2>
+  <p>En la cabecera de la app, junto al nombre de la cunda, hay un pequeño punto que indica el estado de la conexión:</p>
+  <p>
+    <span class="conn-demo"><span class="dot verde"></span> Conectado</span>
+    &nbsp;
+    <span class="conn-demo"><span class="dot rojo"></span> Sin conexión</span>
+  </p>
+  <p>Si el punto está rojo, la app no puede guardar viajes en ese momento. Comprueba tu red antes de registrar.</p>
+
+  <!-- REGISTRO -->
+  <h2>Pestaña Registro</h2>
+  <p>Aquí se registra el viaje del día. Úsala cada mañana antes de salir.</p>
+  <ol>
+    <li><strong>Marca quién viene hoy</strong> — desmarca a quien no venga</li>
+    <li>La app muestra una <strong>sugerencia</strong> (nombre resaltado): es quien menos veces ha conducido en ese grupo exacto</li>
+    <li>Pulsa el botón del <strong>conductor</strong> para registrar el viaje</li>
+    <li>Confirma en el mensaje emergente</li>
+  </ol>
+  <div class="card">
+    ℹ️ El contador de viajes bajo cada nombre se actualiza en tiempo real según quién hayas marcado como presente. La sugerencia es por <strong>grupo exacto</strong>: si hoy vienen 4 y mañana solo 3, los contadores son independientes.
+  </div>
+
+  <h3>⚠️ Sin conexión al registrar</h3>
+  <p>Si intentas guardar un viaje sin internet, aparecerá un <strong>aviso naranja</strong> con el botón <em>Reintentar</em>. Cuando recuperes la cobertura, pulsa Reintentar y el viaje se guardará automáticamente.</p>
+
+  <!-- CUADRANTE -->
+  <h2>Pestaña Cuadrante</h2>
+  <p>Tabla visual con todos tus viajes registrados, organizada en bloques.</p>
+  <ul>
+    <li>Cada <strong>bloque</strong> es una combinación de personas que van juntas habitualmente</li>
+    <li>Las <strong>filas</strong> son los miembros y las <strong>columnas</strong> son los viajes (con fecha)</li>
+    <li>El número <strong>(N)</strong> junto a cada nombre indica cuántas veces ha conducido en ese bloque</li>
+    <li>Los miembros que ya no están en la cunda aparecen con el nombre <span style="text-decoration:line-through;color:#aaa">tachado</span></li>
+  </ul>
+  <p>Al final del cuadrante puedes ver (desplegando):</p>
+  <ul>
+    <li><strong>Cuadrantes de otros miembros</strong> <span class="badge admin">Solo Admin</span> — bloques en los que no participas</li>
+    <li><strong>Cuadrantes eliminados</strong> — bloques ocultos que siguen guardados y se pueden restaurar</li>
+  </ul>
+
+  <!-- HISTORIAL -->
+  <h2>Pestaña Historial</h2>
+  <p>Lista de los últimos viajes en los que has participado, con fecha, conductor, pasajeros y quién lo registró.</p>
+  <table>
+    <tr><th>Acción</th><th>Cómo</th></tr>
+    <tr><td>Editar un viaje</td><td>Pulsa el icono ✏️ — puedes cambiar fecha, conductor y asistentes</td></tr>
+    <tr><td>Eliminar un viaje</td><td>Pulsa el icono 🗑️ — queda registrado quién lo borró y cuándo</td></tr>
+  </table>
+
+  <!-- EMAIL SEMANAL -->
+  <h2>Email semanal</h2>
+  <p>Cada <strong>domingo a las 17:00</strong> recibirás un email con el resumen de la semana y el cuadrante completo actualizado. Sirve también como copia de seguridad del historial.</p>
+
+  <!-- ══════════════════════════════════════ -->
+  <div class="section-banner">⚙️ Guía del Administrador</div>
+
+  <!-- CREAR CUNDA -->
+  <h2 class="no-break">Crear una cunda (primera vez)</h2>
+  <ol>
+    <li>Abre <strong>micunda.es</strong></li>
+    <li>Pulsa la pestaña <strong>"Crear mi cunda"</strong></li>
+    <li>Rellena: nombre de la cunda, tu nombre, email y contraseña</li>
+    <li>Pulsa <strong>Crear cunda</strong> — entrarás automáticamente como administrador</li>
+  </ol>
+  <div class="card green">
+    💡 El creador de la cunda siempre es administrador. Puedes añadir más administradores después desde el panel Admin.
+  </div>
+
+  <!-- AÑADIR MIEMBROS -->
+  <h2>Añadir miembros</h2>
+  <ol>
+    <li>Ve a <strong>Admin</strong> → pulsa <strong>Añadir miembro</strong></li>
+    <li>Rellena los datos:
+      <ul>
+        <li><strong>Nombre</strong> — como aparecerá en el cuadrante (debe ser único en la cunda)</li>
+        <li><strong>Email</strong> — dirección de correo del miembro</li>
+        <li><strong>Contraseña</strong> — la que le asignes (puedes comunicársela directamente)</li>
+        <li><strong>Rol</strong> — Editor (lo habitual) o Administrador</li>
+        <li><strong>Fecha de incorporación</strong> — los viajes anteriores a esta fecha no le afectarán</li>
+      </ul>
+    </li>
+    <li>Pulsa <strong>Añadir</strong> y comparte el email y contraseña con el nuevo miembro</li>
+  </ol>
+  <div class="card orange">
+    ⚠️ Si el nombre ya existe (activo o eliminado) la app avisará para evitar confusiones en el cuadrante. Usa siempre nombres distintos (ej: <em>Paco2</em> si ya hubo un <em>Paco</em>).
+  </div>
+
+  <!-- EDITAR MIEMBRO -->
+  <h2>Editar un miembro</h2>
+  <p>Para cambiar el email, la contraseña o el rol de un miembro:</p>
+  <ol>
+    <li>Ve a <strong>Admin</strong> → pulsa el icono ✏️ junto al nombre del miembro</li>
+    <li>Modifica los campos que necesites:
+      <ul>
+        <li><strong>Email</strong> — nueva dirección de correo</li>
+        <li><strong>Nueva contraseña</strong> — déjala en blanco si no quieres cambiarla</li>
+        <li><strong>Rol</strong> — Admin o Editor</li>
+      </ul>
+    </li>
+    <li>Pulsa <strong>Guardar</strong></li>
+  </ol>
+  <div class="card">
+    ℹ️ No es posible cambiar el nombre de un miembro para evitar inconsistencias en el historial y el cuadrante. Si es necesario, elimina al miembro y añádelo de nuevo.
+  </div>
+  <div class="card orange">
+    ⚠️ <strong>Cambiar el rol</strong>: Un administrador no puede cambiar su propio rol. Para dejar de ser admin, otro admin debe editarte a ti.
+  </div>
+
+  <!-- ELIMINAR MIEMBRO -->
+  <h2>Eliminar un miembro</h2>
+  <p>Cuando alguien deja la cunda:</p>
+  <ol>
+    <li>Ve a <strong>Admin</strong> → pulsa el icono 🗑️ junto a su nombre</li>
+    <li>Confirma la eliminación</li>
+  </ol>
+  <p>El miembro ya no podrá acceder, pero sus viajes históricos se conservan en el historial y en el cuadrante (su nombre aparecerá tachado).</p>
+
+  <!-- IMPORTAR VIAJES -->
+  <h2>Importar viajes anteriores</h2>
+  <p>Si la cunda ya funcionaba antes de usar miCunda, puedes introducir los viajes pasados para que los contadores sean correctos desde el principio.</p>
+  <ol>
+    <li>Ve a <strong>Admin</strong> → pulsa <strong>Importar viajes anteriores</strong></li>
+    <li>Para cada viaje: selecciona la fecha, el conductor y marca quién vino</li>
+    <li>Pulsa <strong>Guardar y añadir otro</strong> — la fecha retrocede un día automáticamente</li>
+    <li>Cuando termines pulsa <strong>Cerrar</strong></li>
+  </ol>
+  <div class="card green">
+    💡 Empieza por el viaje más reciente e ir hacia atrás — la fecha baja sola y es más rápido.
+  </div>
+
+  <!-- GESTIONAR CUADRANTES -->
+  <h2>Gestionar bloques del cuadrante</h2>
+
+  <h3>🗑️ Ocultar un bloque</h3>
+  <p>Cuando una combinación de personas ya no se va a repetir (ej: alguien dejó la cunda o entró alguien nuevo):</p>
+  <ol>
+    <li>En el <strong>Cuadrante</strong>, pulsa el icono 🗑️ en la esquina del bloque</li>
+    <li>Confirma → el bloque desaparece de la vista de todos los miembros</li>
+  </ol>
+
+  <h3>👥 Ver cuadrantes de otros miembros</h3>
+  <p>Al final del cuadrante, el administrador puede desplegar <em>"Ver cuadrantes de otros miembros"</em> para ver y gestionar los bloques de viajes en los que no participó directamente.</p>
+
+  <h3>👁️ Restaurar un bloque oculto</h3>
+  <p>Al final del cuadrante → desplegar <em>"Ver cuadrantes eliminados"</em> → pulsa <strong>Restaurar</strong> junto al bloque que quieras recuperar.</p>
+
+  <!-- ══════════════════════════════════════ -->
+  <h2>Preguntas frecuentes</h2>
+
+  <div class="faq-item">
+    <div class="faq-q">¿Qué pasa si me equivoco al registrar un viaje?</div>
+    <div class="faq-a">Ve al Historial, pulsa el lápiz ✏️ y corrígelo. Quedará registrado que fue editado.</div>
+  </div>
+  <div class="faq-item">
+    <div class="faq-q">¿Y si alguien se une a la cunda más tarde?</div>
+    <div class="faq-a">El administrador le añade con la fecha de incorporación correcta. Los viajes anteriores a esa fecha no le afectan.</div>
+  </div>
+  <div class="faq-item">
+    <div class="faq-q">¿Puedo pertenecer a más de una cunda?</div>
+    <div class="faq-a">Sí. Puedes pertenecer a varias cundas con el mismo email. Al iniciar sesión, si tienes más de una, aparecerá una pantalla para elegir a cuál acceder.</div>
+  </div>
+  <div class="faq-item">
+    <div class="faq-q">¿Cómo cambio mi contraseña?</div>
+    <div class="faq-a">El administrador puede cambiarla desde Admin → ✏️ junto a tu nombre → campo "Nueva contraseña".</div>
+  </div>
+  <div class="faq-item">
+    <div class="faq-q">¿Los datos se borran si la app falla?</div>
+    <div class="faq-a">No. Todo está guardado en la nube. Además recibes el cuadrante completo cada domingo por email como copia de seguridad.</div>
+  </div>
+  <div class="faq-item">
+    <div class="faq-q">¿La app funciona sin internet?</div>
+    <div class="faq-a">Puedes ver el historial y el cuadrante de tu última sesión, pero no puedes guardar viajes nuevos sin conexión. Aparecerá un aviso naranja con un botón para reintentar cuando recuperes la red.</div>
+  </div>
+  <div class="faq-item">
+    <div class="faq-q">¿Puedo usarla desde el ordenador?</div>
+    <div class="faq-a">Sí, funciona en cualquier navegador moderno: móvil, tablet u ordenador.</div>
+  </div>
+  <div class="faq-item">
+    <div class="faq-q">¿A quién contacto si hay algún problema?</div>
+    <div class="faq-a">Escribe a <strong>hola@micunda.es</strong> e intentaremos responderte lo antes posible.</div>
+  </div>
+
+  <div class="footer">
+    miCunda · micunda.es · hola@micunda.es
+  </div>
+
+</div>
+
+<!-- BOTÓN IMPRIMIR -->
+<button class="print-btn no-print" onclick="window.print()">🖨️ Guardar PDF</button>
+
+</body>
+</html>
