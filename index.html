@@ -727,6 +727,27 @@
   </div>
 </div>
 
+<!-- MODAL: EDITAR MIEMBRO -->
+<div id="modalEditarMiembro" class="modal-backdrop" style="display:none" onclick="closeModal('modalEditarMiembro',event)">
+  <div class="modal-sheet" onclick="event.stopPropagation()">
+    <div class="modal-title">Editar miembro</div>
+    <div class="modal-text" style="margin-bottom:12px">Editando a <strong id="modalEditarNombre"></strong></div>
+    <div class="form-field">
+      <label class="form-label">Email</label>
+      <input type="email" id="modalEditarEmail" class="form-input" placeholder="correo@ejemplo.com">
+    </div>
+    <div class="form-field">
+      <label class="form-label">Nueva contraseña <span style="font-weight:400;font-size:11px;opacity:.7">(vacío = no cambiar)</span></label>
+      <input type="password" id="modalEditarPwd" class="form-input" placeholder="••••••••">
+    </div>
+    <div id="modalEditarErr" style="font-family:'Oswald',sans-serif;font-size:13px;color:var(--rojo);min-height:16px;margin-bottom:8px"></div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal('modalEditarMiembro')">Cancelar</button>
+      <button class="btn-confirm" onclick="guardarEditarMiembro()">Guardar</button>
+    </div>
+  </div>
+</div>
+
 <!-- TOAST -->
 <div class="toast-wrap">
   <div id="toastMsg" class="toast-msg"></div>
@@ -744,6 +765,7 @@ let session = null; // { miembroId, nombre, rol, cundaId, cundaNombre, incorpora
 let state   = { miembros: [], viajes: [], attendance: {} };
 let _editingViajeId    = null;
 let _eliminarMiembroId = null;
+let _editarMiembroId   = null;
 
 // ════════════════════════════════════
 //  AUTH
@@ -1460,6 +1482,9 @@ function renderAdmin() {
         <div class="incorp-date">Desde ${isoToDisplay(m.incorporado_at)}</div>
       </div>
       <span class="role-badge ${m.rol}">${m.rol === 'admin' ? 'Admin' : 'Editor'}</span>
+      <button class="action-btn edit" onclick="openEditarMiembro('${m.id}')" title="Editar">
+        <i class="bi bi-pencil-fill"></i>
+      </button>
       ${m.id !== session.miembroId ? `
       <button class="action-btn del" onclick="openEliminarMiembro('${m.id}','${m.nombre}')" title="Eliminar">
         <i class="bi bi-person-x-fill"></i>
@@ -1487,6 +1512,41 @@ async function confirmarEliminarMiembro() {
     await reloadAll();
   } catch (err) {
     showToast('Error al eliminar el miembro', 'err');
+    console.error(err);
+    showLoading(false);
+  }
+}
+
+function openEditarMiembro(id) {
+  const m = state.miembros.find(x => x.id === id);
+  if (!m) return;
+  _editarMiembroId = id;
+  document.getElementById('modalEditarNombre').textContent = m.nombre;
+  document.getElementById('modalEditarEmail').value = m.email || '';
+  document.getElementById('modalEditarPwd').value = '';
+  document.getElementById('modalEditarErr').textContent = '';
+  document.getElementById('modalEditarMiembro').style.display = 'flex';
+}
+
+async function guardarEditarMiembro() {
+  const email = document.getElementById('modalEditarEmail').value.trim().toLowerCase();
+  const pwd   = document.getElementById('modalEditarPwd').value;
+  const errEl = document.getElementById('modalEditarErr');
+  errEl.textContent = '';
+  if (!email) { errEl.textContent = 'El email no puede estar vacío'; return; }
+  closeModal('modalEditarMiembro');
+  showLoading(true);
+  try {
+    const { error: eErr } = await db.from('miembros').update({ email }).eq('id', _editarMiembroId);
+    if (eErr) throw eErr;
+    if (pwd) {
+      const { error: pErr } = await db.rpc('change_password', { p_id: _editarMiembroId, p_new_password: pwd });
+      if (pErr) throw pErr;
+    }
+    showToast('Datos del miembro actualizados', 'ok');
+    await reloadAll();
+  } catch (err) {
+    showToast('Error al guardar', 'err');
     console.error(err);
     showLoading(false);
   }
