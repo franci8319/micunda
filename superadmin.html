@@ -437,9 +437,10 @@ function cerrarModalDel() {
 
 async function confirmarDelete() {
   if (!_pendingDeleteId) return;
+  const idToDelete = _pendingDeleteId;
   cerrarModalDel();
   try {
-    await rpc('delete_cunda', { p_token: _token, p_cunda_id: _pendingDeleteId });
+    await rpc('delete_cunda', { p_token: _token, p_cunda_id: idToDelete });
     await refreshStats();
   } catch (err) {
     alert('Error al eliminar: ' + err.message);
