@@ -368,6 +368,34 @@
       font-family: 'Oswald', sans-serif; font-size: 15px; color: var(--txt);
     }
 
+    /* ── Banner novedades ── */
+    .novedades-banner {
+      background: var(--azul-dark); color: var(--fondo);
+      border-bottom: 3px solid var(--naranja);
+      padding: 10px 14px 10px 16px;
+      display: flex; align-items: flex-start; gap: 10px;
+      box-shadow: 0 3px 0 rgba(0,0,0,.25);
+    }
+    .novedades-icono {
+      font-family: 'VT323', monospace; font-size: 22px;
+      color: var(--naranja); flex-shrink: 0; line-height: 1.2;
+    }
+    .novedades-body { flex: 1; }
+    .novedades-titulo {
+      font-family: 'Bebas Neue', 'Oswald', sans-serif; font-size: 14px;
+      letter-spacing: 2px; color: var(--naranja); margin-bottom: 4px;
+    }
+    .novedad-linea {
+      font-family: 'VT323', monospace; font-size: 17px; line-height: 1.3;
+      color: #EDE8DF;
+    }
+    .novedades-close {
+      background: none; border: none; color: var(--fondo); opacity: .6;
+      font-size: 20px; cursor: pointer; flex-shrink: 0; padding: 0 2px;
+      line-height: 1;
+    }
+    .novedades-close:hover { opacity: 1; }
+
     /* ── Toast ── */
     .toast-wrap {
       position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%);
@@ -547,6 +575,16 @@
     </div>
     <button class="install-btn" onclick="doInstallPWA()">Instalar</button>
     <button class="install-dismiss" onclick="dismissInstallBanner()" title="Cerrar">×</button>
+  </div>
+
+  <!-- BANNER: NOVEDADES -->
+  <div id="novedadesBanner" class="novedades-banner" style="display:none">
+    <div class="novedades-icono">🚗</div>
+    <div class="novedades-body">
+      <div class="novedades-titulo">Viajes desde tu última visita</div>
+      <div id="novedadesContent"></div>
+    </div>
+    <button class="novedades-close" onclick="cerrarNovedades()" title="Cerrar">×</button>
   </div>
 
   <!-- NAV -->
@@ -1057,11 +1095,62 @@ async function iniciarApp() {
     renderCuadrante();
     renderHistorial();
     if (session.rol === 'admin') renderAdmin();
+    checkViajesNuevos();
   } finally {
     showLoading(false);
   }
 }
 
+// ════════════════════════════════════
+//  NOVEDADES
+// ════════════════════════════════════
+async function checkViajesNuevos() {
+  const key       = `mc_last_check_${session.miembroId}`;
+  const lastCheck = localStorage.getItem(key);
+  localStorage.setItem(key, new Date().toISOString());
+
+  if (!lastCheck) return; // primera visita, sin referencia
+
+  const { data: viajes } = await db
+    .from('viajes')
+    .select('fecha, conductor_id, asistentes, created_by')
+    .eq('cunda_id', session.cundaId)
+    .is('deleted_at', null)
+    .gte('created_at', lastCheck)
+    .neq('created_by', session.miembroId);
+
+  if (!viajes?.length) return;
+
+  const mios = viajes.filter(v =>
+    v.conductor_id === session.miembroId ||
+    (v.asistentes || []).includes(session.miembroId)
+  );
+
+  if (!mios.length) return;
+
+  const mapaM = Object.fromEntries((state.miembros || []).map(m => [m.id, m.nombre]));
+  const lineas = mios.map(v => {
+    const [, mo, d] = v.fecha.split('-');
+    const quien = mapaM[v.created_by] || 'Alguien';
+    const rol   = v.conductor_id === session.miembroId ? 'conducías' : 'ibas de pasajero';
+    return `▶ ${quien} registró el ${d}/${mo} (${rol})`;
+  });
+
+  document.getElementById('novedadesContent').innerHTML =
+    lineas.map(l => `<div class="novedad-linea">${l}</div>`).join('');
+  document.getElementById('novedadesBanner').style.display = 'flex';
+}
+
+function cerrarNovedades() {
+  document.getElementById('novedadesBanner').style.display = 'none';
+}
+
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && session) {
+    document.getElementById('novedadesBanner').style.display = 'none';
+    checkViajesNuevos();
+  }
+});
 
 // ════════════════════════════════════
 //  DATOS
