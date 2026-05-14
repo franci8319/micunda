@@ -52,7 +52,7 @@ function buildWeeklySummary(miembros, viajes, start, end) {
   }).join('');
 }
 
-function buildCuadrante(miembros, viajes) {
+function buildCuadrante(miembros, viajes, memberId = null) {
   if (!viajes.length) return '<p style="color:#999;text-align:center;font-size:13px">Sin viajes registrados.</p>';
 
   const groups = {};
@@ -67,6 +67,17 @@ function buildCuadrante(miembros, viajes) {
     }
     groups[k].trips.push(v);
   });
+
+  if (memberId) {
+    Object.keys(groups).forEach(k => {
+      const participa = groups[k].trips.some(v =>
+        v.conductor_id === memberId || (v.asistentes || []).includes(memberId)
+      );
+      if (!participa) delete groups[k];
+    });
+  }
+
+  if (!Object.keys(groups).length) return '<p style="color:#999;text-align:center;font-size:13px">Sin viajes registrados en tu grupo esta semana.</p>';
 
   return Object.values(groups).map((g, idx) => {
     const label = g.miembros.map(m => m.nombre.split(' ')[0]).join(' · ');
@@ -149,19 +160,23 @@ async function main() {
 
   for (const cunda of cundas) {
     const [miembros, viajes, modificados] = await Promise.all([
-      sb(`miembros?select=id,nombre,email,incorporado_at&cunda_id=eq.${cunda.id}&order=incorporado_at.asc`),
+      sb(`miembros?select=id,nombre,email,rol,incorporado_at&cunda_id=eq.${cunda.id}&order=incorporado_at.asc`),
       sb(`viajes?select=*&cunda_id=eq.${cunda.id}&deleted_at=is.null&order=fecha.asc`),
       sb(`viajes?select=*&cunda_id=eq.${cunda.id}&deleted_at=is.null&updated_at=gte.${start}&updated_at=lte.${end}T23:59:59&updated_by=not.is.null&order=updated_at.asc`)
     ]);
 
-    const emails = miembros.map(m => m.email).filter(Boolean);
-    if (!emails.length) continue;
+    const miembrosConEmail = miembros.filter(m => m.email);
+    if (!miembrosConEmail.length) continue;
 
-    const summaryHTML       = buildWeeklySummary(miembros, viajes, start, end);
-    const cuadranteHTML     = buildCuadrante(miembros, viajes);
+    const summaryHTML        = buildWeeklySummary(miembros, viajes, start, end);
     const modificacionesHTML = buildModificaciones(miembros, modificados);
 
-    const html = `
+    let enviados = 0;
+    for (const miembro of miembrosConEmail) {
+      const esAdmin       = miembro.rol === 'admin';
+      const cuadranteHTML = buildCuadrante(miembros, viajes, esAdmin ? null : miembro.id);
+
+      const html = `
 <!DOCTYPE html>
 <html lang="es">
 <body style="margin:0;padding:0;background:#ECEFF1;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
@@ -209,24 +224,22 @@ async function main() {
 </body>
 </html>`;
 
-    const res = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${RESEND_KEY}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        from:    'miCunda <noreply@micunda.es>',
-        to:      emails,
-        subject: `🚗 Resumen semanal · ${weekLabel} · ${cunda.nombre}`,
-        html
-      })
-    });
+      const res  = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${RESEND_KEY}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          from:    'miCunda <noreply@micunda.es>',
+          to:      [miembro.email],
+          subject: `🚗 Resumen semanal · ${weekLabel} · ${cunda.nombre}`,
+          html
+        })
+      });
+      const data = await res.json();
+      console.log(`[${cunda.nombre}] → ${miembro.email}`, data.id || data);
+      if (data.id) enviados++;
+    }
 
-    const data = await res.json();
-    console.log(`[${cunda.nombre}] → ${emails.join(', ')}`, data.id || data);
-
-    if (data.id) {
+    if (enviados > 0) {
       await fetch(`${SUPABASE_URL}/rest/v1/email_logs`, {
         method: 'POST',
         headers: {
@@ -237,7 +250,7 @@ async function main() {
         body: JSON.stringify({
           tipo:          'semanal',
           cunda_nombre:  cunda.nombre,
-          destinatarios: emails.length
+          destinatarios: enviados
         })
       }).catch(() => {});
     }
