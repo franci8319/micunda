@@ -119,6 +119,26 @@ function buildCuadrante(miembros, viajes) {
   }).join('');
 }
 
+function buildModificaciones(miembros, modificados) {
+  if (!modificados.length) {
+    return '<p style="color:#999;font-size:14px;margin:0">No hay modificaciones de registro esta semana.</p>';
+  }
+
+  return modificados.map(v => {
+    const editor = miembros.find(m => m.id === v.updated_by);
+    const cond   = miembros.find(m => m.id === v.conductor_id);
+    const asis   = (v.asistentes || [])
+      .map(id => miembros.find(m => m.id === id)?.nombre?.split(' ')[0])
+      .filter(Boolean).join(', ');
+    return `
+      <div style="padding:9px 0;border-bottom:1px solid #F5F5F5;font-size:14px">
+        <strong style="color:#D4520A">${editor?.nombre || '?'}</strong>
+        <span style="color:#888"> editó el viaje del <strong style="color:#333">${fmt(v.fecha)}</strong>
+        · conductor: ${cond?.nombre?.split(' ')[0] || '?'}${asis ? ' · <em>' + asis + '</em>' : ''}</span>
+      </div>`;
+  }).join('');
+}
+
 async function main() {
   const { start, end } = getWeekBounds();
   const [, sm, sd] = start.split('-');
@@ -128,16 +148,18 @@ async function main() {
   const cundas = await sb('cundas?select=id,nombre');
 
   for (const cunda of cundas) {
-    const [miembros, viajes] = await Promise.all([
+    const [miembros, viajes, modificados] = await Promise.all([
       sb(`miembros?select=id,nombre,email,incorporado_at&cunda_id=eq.${cunda.id}&order=incorporado_at.asc`),
-      sb(`viajes?select=*&cunda_id=eq.${cunda.id}&deleted_at=is.null&order=fecha.asc`)
+      sb(`viajes?select=*&cunda_id=eq.${cunda.id}&deleted_at=is.null&order=fecha.asc`),
+      sb(`viajes?select=*&cunda_id=eq.${cunda.id}&deleted_at=is.null&updated_at=gte.${start}&updated_at=lte.${end}T23:59:59&updated_by=not.is.null&order=updated_at.asc`)
     ]);
 
     const emails = miembros.map(m => m.email).filter(Boolean);
     if (!emails.length) continue;
 
-    const summaryHTML   = buildWeeklySummary(miembros, viajes, start, end);
-    const cuadranteHTML = buildCuadrante(miembros, viajes);
+    const summaryHTML       = buildWeeklySummary(miembros, viajes, start, end);
+    const cuadranteHTML     = buildCuadrante(miembros, viajes);
+    const modificacionesHTML = buildModificaciones(miembros, modificados);
 
     const html = `
 <!DOCTYPE html>
@@ -168,6 +190,14 @@ async function main() {
       📊 Cuadrante de viajes
     </h2>
     ${cuadranteHTML}
+
+    <div style="height:28px"></div>
+
+    <!-- Modificaciones -->
+    <h2 style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:#555;margin:0 0 14px">
+      ✏️ Modificaciones de registro esta semana
+    </h2>
+    ${modificacionesHTML}
 
     <!-- Pie -->
     <p style="margin:28px 0 0;font-size:12px;color:#bbb;text-align:center">
