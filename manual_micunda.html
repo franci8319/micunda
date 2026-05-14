@@ -238,6 +238,9 @@
   <div class="card">
     ℹ️ El contador de viajes bajo cada nombre se actualiza en tiempo real según quién hayas marcado como presente. La sugerencia es por <strong>grupo exacto</strong>: si hoy vienen 4 y mañana solo 3, los contadores son independientes.
   </div>
+  <div class="card orange">
+    ⚠️ <strong>Solo puedes registrar un viaje en el que vayas tú</strong> — como conductor o como pasajero. Si no estás marcado como presente, la app no permitirá el registro.
+  </div>
 
   <h3>⚠️ Sin conexión al registrar</h3>
   <p>Si intentas guardar un viaje sin internet, aparecerá un <strong>aviso naranja</strong> con el botón <em>Reintentar</em>. Cuando recuperes la cobertura, pulsa Reintentar y el viaje se guardará automáticamente.</p>
@@ -259,16 +262,39 @@
 
   <!-- HISTORIAL -->
   <h2>Pestaña Historial</h2>
-  <p>Lista de los últimos viajes en los que has participado, con fecha, conductor, pasajeros y quién lo registró.</p>
+  <p>Lista de los últimos viajes registrados, con fecha, conductor, pasajeros y quién lo registró o modificó.</p>
+  <p>Los botones de editar y borrar solo aparecen si tienes permiso sobre ese viaje concreto:</p>
   <table>
-    <tr><th>Acción</th><th>Cómo</th></tr>
-    <tr><td>Editar un viaje</td><td>Pulsa el icono ✏️ — puedes cambiar fecha, conductor y asistentes</td></tr>
-    <tr><td>Eliminar un viaje</td><td>Pulsa el icono 🗑️ — queda registrado quién lo borró y cuándo</td></tr>
+    <tr><th>Acción</th><th>Conductor</th><th>Pasajero</th><th>No participó</th><th>Admin</th></tr>
+    <tr><td>✏️ Editar</td><td>✅</td><td>✅</td><td>❌</td><td>✅</td></tr>
+    <tr><td>🗑️ Eliminar</td><td>✅</td><td>❌</td><td>❌</td><td>✅</td></tr>
   </table>
+  <div class="card">
+    ℹ️ Los viajes eliminados no se borran definitivamente — quedan registrados con quién los eliminó y cuándo, y son visibles para el administrador.
+  </div>
+
+  <!-- AVISO DE NOVEDADES -->
+  <h2>Aviso de novedades</h2>
+  <p>Cuando abres la app o vuelves de tenerla en segundo plano, aparece automáticamente un aviso si desde tu última visita alguien ha <strong>registrado</strong>, <strong>editado</strong> o <strong>eliminado</strong> un viaje en el que ibas.</p>
+  <div class="card green">
+    Ejemplos de aviso:<br><br>
+    ▶ Juan registró el 12/05 (eras el <strong>conductor</strong>)<br>
+    ▶ María editó el viaje del 10/05 (ibas de pasajero)<br>
+    ▶ Pedro eliminó el viaje del 08/05 (eras el <strong>conductor</strong>)
+  </div>
+  <p>Pulsa <strong>Entendido</strong> para cerrar el aviso.</p>
 
   <!-- EMAIL SEMANAL -->
   <h2>Email semanal</h2>
-  <p>Cada <strong>domingo a las 17:00</strong> recibirás un email con el resumen de la semana y el cuadrante completo actualizado. Sirve también como copia de seguridad del historial.</p>
+  <p><strong>Un día a la semana a las 17:00</strong> recibirás un email con:</p>
+  <ul>
+    <li>Resumen de los viajes de esa semana</li>
+    <li>Tu cuadrante de viajes — solo los bloques en los que participas</li>
+    <li>Listado de modificaciones realizadas esa semana sobre viajes ya registrados. Si no hay ninguna, indica <em>"No hay modificaciones de registro esta semana"</em></li>
+  </ul>
+  <div class="card">
+    ℹ️ Sirve también como copia de seguridad por si la app no estuviera disponible. El administrador recibe el cuadrante completo con todos los bloques.
+  </div>
 
   <!-- ══════════════════════════════════════ -->
   <div class="section-banner">⚙️ Guía del Administrador</div>
@@ -368,7 +394,11 @@
 
   <div class="faq-item">
     <div class="faq-q">¿Qué pasa si me equivoco al registrar un viaje?</div>
-    <div class="faq-a">Ve al Historial, pulsa el lápiz ✏️ y corrígelo. Quedará registrado que fue editado.</div>
+    <div class="faq-a">Ve al Historial, pulsa el lápiz ✏️ y corrígelo — puedes hacerlo si eras conductor o pasajero en ese viaje. Quedará registrado que fue editado.</div>
+  </div>
+  <div class="faq-item">
+    <div class="faq-q">¿Por qué no veo los botones de editar o eliminar en el historial?</div>
+    <div class="faq-a">Solo aparecen si participaste en ese viaje. El botón de eliminar además solo lo ven el conductor del viaje y el administrador.</div>
   </div>
   <div class="faq-item">
     <div class="faq-q">¿Y si alguien se une a la cunda más tarde?</div>
@@ -384,7 +414,7 @@
   </div>
   <div class="faq-item">
     <div class="faq-q">¿Los datos se borran si la app falla?</div>
-    <div class="faq-a">No. Todo está guardado en la nube. Además recibes el cuadrante completo cada domingo por email como copia de seguridad.</div>
+    <div class="faq-a">No. Todo está guardado en la nube. Además recibes el cuadrante completo una vez a la semana por email como copia de seguridad.</div>
   </div>
   <div class="faq-item">
     <div class="faq-q">¿La app funciona sin internet?</div>
