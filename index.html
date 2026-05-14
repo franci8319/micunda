@@ -390,11 +390,12 @@
       color: #EDE8DF;
     }
     .novedades-close {
-      background: none; border: none; color: var(--fondo); opacity: .6;
-      font-size: 20px; cursor: pointer; flex-shrink: 0; padding: 0 2px;
-      line-height: 1;
+      background: var(--naranja); border: none; color: #fff;
+      font-family: 'Bebas Neue', 'Oswald', sans-serif; font-size: 14px; letter-spacing: 1px;
+      cursor: pointer; flex-shrink: 0; padding: 6px 12px;
+      box-shadow: 2px 2px 0 #7A2A00; align-self: flex-end; margin-top: 8px;
     }
-    .novedades-close:hover { opacity: 1; }
+    .novedades-close:active { transform: translate(1px,1px); box-shadow: 1px 1px 0 #7A2A00; }
 
     /* ── Toast ── */
     .toast-wrap {
@@ -584,7 +585,7 @@
       <div class="novedades-titulo">Viajes desde tu última visita</div>
       <div id="novedadesContent"></div>
     </div>
-    <button class="novedades-close" onclick="cerrarNovedades()" title="Cerrar">×</button>
+    <button class="novedades-close" onclick="cerrarNovedades()">Entendido</button>
   </div>
 
   <!-- NAV -->
@@ -1109,32 +1110,37 @@ async function checkViajesNuevos() {
   const lastCheck = localStorage.getItem(key);
   localStorage.setItem(key, new Date().toISOString());
 
-  if (!lastCheck) return; // primera visita, sin referencia
-
-  const { data: viajes } = await db
-    .from('viajes')
-    .select('fecha, conductor_id, asistentes, created_by')
-    .eq('cunda_id', session.cundaId)
-    .is('deleted_at', null)
-    .gte('created_at', lastCheck)
-    .neq('created_by', session.miembroId);
-
-  if (!viajes?.length) return;
-
-  const mios = viajes.filter(v =>
-    v.conductor_id === session.miembroId ||
-    (v.asistentes || []).includes(session.miembroId)
-  );
-
-  if (!mios.length) return;
+  if (!lastCheck) return;
 
   const mapaM = Object.fromEntries((state.miembros || []).map(m => [m.id, m.nombre]));
-  const lineas = mios.map(v => {
-    const [, mo, d] = v.fecha.split('-');
-    const quien = mapaM[v.created_by] || 'Alguien';
-    const rol   = v.conductor_id === session.miembroId ? 'conducías' : 'ibas de pasajero';
-    return `▶ ${quien} registró el ${d}/${mo} (${rol})`;
-  });
+  const yo    = session.miembroId;
+
+  function fmtFecha(iso) { const [,mo,d] = iso.split('-'); return `${d}/${mo}`; }
+  function rolTexto(v)   { return v.conductor_id === yo ? 'eras el <b>conductor</b>' : 'ibas de pasajero'; }
+  function esMio(v)      { return v.conductor_id === yo || (v.asistentes || []).includes(yo); }
+
+  const [{ data: registrados }, { data: editados }, { data: eliminados }] = await Promise.all([
+    db.from('viajes').select('fecha, conductor_id, asistentes, created_by')
+      .eq('cunda_id', session.cundaId).is('deleted_at', null)
+      .gte('created_at', lastCheck).neq('created_by', yo),
+    db.from('viajes').select('fecha, conductor_id, asistentes, updated_by')
+      .eq('cunda_id', session.cundaId).is('deleted_at', null)
+      .gte('updated_at', lastCheck).neq('updated_by', yo),
+    db.from('viajes').select('fecha, conductor_id, asistentes, deleted_by')
+      .eq('cunda_id', session.cundaId).not('deleted_at', 'is', null)
+      .gte('deleted_at', lastCheck).neq('deleted_by', yo)
+  ]);
+
+  const lineas = [
+    ...(registrados || []).filter(esMio).map(v =>
+      `▶ ${mapaM[v.created_by] || 'Alguien'} registró el ${fmtFecha(v.fecha)} (${rolTexto(v)})`),
+    ...(editados || []).filter(esMio).map(v =>
+      `▶ ${mapaM[v.updated_by] || 'Alguien'} editó el viaje del ${fmtFecha(v.fecha)} (${rolTexto(v)})`),
+    ...(eliminados || []).filter(esMio).map(v =>
+      `▶ ${mapaM[v.deleted_by] || 'Alguien'} eliminó el viaje del ${fmtFecha(v.fecha)} (${rolTexto(v)})`)
+  ];
+
+  if (!lineas.length) return;
 
   document.getElementById('novedadesContent').innerHTML =
     lineas.map(l => `<div class="novedad-linea">${l}</div>`).join('');
@@ -1329,6 +1335,14 @@ function onDriverClick(conductorId) {
 let _pendingConductorId = null;
 
 async function registrarViaje(conductorId) {
+  if (session.rol !== 'admin') {
+    const yoConduzco  = conductorId === session.miembroId;
+    const yoAsistente = state.attendance[session.miembroId] && conductorId !== session.miembroId;
+    if (!yoConduzco && !yoAsistente) {
+      showToast('Solo puedes registrar un viaje en el que vayas tú', 'err');
+      return;
+    }
+  }
   if (!navigator.onLine) {
     _pendingConductorId = conductorId;
     document.getElementById('offlineBanner').classList.add('show');
@@ -1582,12 +1596,15 @@ function renderHistorial(resetPage) {
   }
 
   const visible = todos.slice(0, _historialVisible);
-  const canEdit = session.rol === 'admin' || session.rol === 'editor';
+  const isAdmin = session.rol === 'admin';
 
   visible.forEach(v => {
-    const asistNombres = (v.asistentes || []).map(id => nombreMiembro(id)).join(', ');
+    const asistNombres  = (v.asistentes || []).map(id => nombreMiembro(id)).join(', ');
     const registradoPor = v.created_by ? nombreMiembro(v.created_by) : '?';
     const modificadoPor = v.updated_by ? ` · Editado por ${nombreMiembro(v.updated_by)}` : '';
+    const yoParticipo   = v.conductor_id === session.miembroId || (v.asistentes || []).includes(session.miembroId);
+    const puedeEditar   = isAdmin || yoParticipo;
+    const puedeBorrar   = isAdmin || v.conductor_id === session.miembroId;
 
     const row = document.createElement('div');
     row.className = 'history-row';
@@ -1601,14 +1618,10 @@ function renderHistorial(resetPage) {
         </div>
         <div class="history-audit">Registrado por ${registradoPor}${modificadoPor}</div>
       </div>
-      ${canEdit ? `
+      ${puedeEditar || puedeBorrar ? `
       <div class="history-actions">
-        <button class="action-btn edit" onclick="openEditViaje('${v.id}')" title="Editar">
-          <i class="bi bi-pencil"></i>
-        </button>
-        <button class="action-btn del" onclick="openBorrarViaje('${v.id}')" title="Eliminar">
-          <i class="bi bi-trash"></i>
-        </button>
+        ${puedeEditar ? `<button class="action-btn edit" onclick="openEditViaje('${v.id}')" title="Editar"><i class="bi bi-pencil"></i></button>` : ''}
+        ${puedeBorrar ? `<button class="action-btn del" onclick="openBorrarViaje('${v.id}')" title="Eliminar"><i class="bi bi-trash"></i></button>` : ''}
       </div>` : ''}
     `;
     cont.appendChild(row);
