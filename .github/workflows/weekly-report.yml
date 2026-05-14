@@ -2,7 +2,7 @@ name: Weekly miCunda Report
 
 on:
   schedule:
-    - cron: '0 16 * * 0'  # Domingos 17:00 CET (16:00 UTC)
+    - cron: '0 16 * * *'  # Cada día a las 17:00 CET (16:00 UTC)
   workflow_dispatch:       # Permite lanzarlo manualmente para probar
 
 jobs:

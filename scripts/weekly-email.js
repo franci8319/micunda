@@ -156,7 +156,10 @@ async function main() {
   const [ey, em, ed] = end.split('-');
   const weekLabel = `${sd}/${sm} – ${ed}/${em}/${ey}`;
 
-  const cundas = await sb('cundas?select=id,nombre');
+  const todasCundas = await sb('cundas?select=id,nombre&order=created_at.asc');
+  const porDia  = 15;
+  const dia     = new Date().getDay(); // 0=dom, 1=lun, ..., 6=sab
+  const cundas  = todasCundas.slice(dia * porDia, dia * porDia + porDia);
 
   for (const cunda of cundas) {
     const [miembros, viajes, modificados] = await Promise.all([
