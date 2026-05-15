@@ -51,8 +51,19 @@
   /* Stat cards */
   .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 28px; }
   .stat-card { background: var(--panel); border: 2px solid var(--border); box-shadow: 4px 4px 0 rgba(0,0,0,.1); padding: 16px; text-align: center; }
+  .stat-card.ok   { border-color: var(--verde); }
+  .stat-card.warn { border-color: var(--naranja); }
+  .stat-card.crit { border-color: var(--rojo); }
   .stat-num { font-family: 'Bebas Neue', 'Oswald', sans-serif; font-size: 42px; color: var(--azul); line-height: 1; }
+  .stat-card.ok   .stat-num { color: var(--verde); }
+  .stat-card.warn .stat-num { color: var(--naranja); }
+  .stat-card.crit .stat-num { color: var(--rojo); }
   .stat-label { font-family: 'Oswald', sans-serif; font-size: 11px; color: var(--txt-dim); margin-top: 4px; letter-spacing: 1px; text-transform: uppercase; }
+  .stat-bar-wrap { margin-top: 8px; background: var(--panel2); border: 1px solid var(--border); height: 6px; width: 100%; }
+  .stat-bar { height: 100%; background: var(--verde); transition: width .4s; }
+  .stat-card.warn .stat-bar { background: var(--naranja); }
+  .stat-card.crit .stat-bar { background: var(--rojo); }
+  .stat-pct { font-family: 'Oswald', sans-serif; font-size: 10px; color: var(--txt-dim); margin-top: 3px; letter-spacing: 1px; }
 
   /* Section */
   .section-title { font-family: 'Bebas Neue', 'Oswald', sans-serif; font-size: 18px; color: var(--azul); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px; padding-bottom: 6px; border-bottom: 2px solid var(--border); }
@@ -301,16 +312,26 @@ function renderPanel(data) {
   document.getElementById('panelContent').style.display = 'block';
 
   const t = data.totales || {};
+  const VIAJES_LIMIT = 10000;
+  const viajes = t.viajes || 0;
+  const pct = Math.min(100, Math.round(viajes / VIAJES_LIMIT * 100));
+  const viajesClass = pct >= 80 ? 'crit' : pct >= 50 ? 'warn' : 'ok';
+
   document.getElementById('statGrid').innerHTML = [
-    { num: t.cundas   || 0, label: 'Cundas' },
-    { num: t.miembros || 0, label: 'Miembros activos' },
-    { num: t.viajes   || 0, label: 'Viajes registrados' },
-    { num: t.emails   || 0, label: 'Emails enviados' }
+    { num: t.cundas   || 0, label: 'Cundas',             cls: '' },
+    { num: t.miembros || 0, label: 'Miembros activos',   cls: '' },
+    { num: t.emails   || 0, label: 'Emails enviados',    cls: '' },
   ].map(s => `
     <div class="stat-card">
       <div class="stat-num">${s.num}</div>
       <div class="stat-label">${s.label}</div>
-    </div>`).join('');
+    </div>`).join('') + `
+    <div class="stat-card ${viajesClass}">
+      <div class="stat-num">${viajes}</div>
+      <div class="stat-label">Viajes registrados</div>
+      <div class="stat-bar-wrap"><div class="stat-bar" style="width:${pct}%"></div></div>
+      <div class="stat-pct">${pct}% de ${VIAJES_LIMIT.toLocaleString('es')} (referencia)</div>
+    </div>`;
 
   const cundas = data.cundas || [];
   document.getElementById('cundasBody').innerHTML = cundas.length
