@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git log *)",
+      "Read(//e/ANTIGRAVITY/cunda/**)",
+      "Bash(git mv *)",
+      "Bash(mv MANUAL_MICUNDA.html manual_micunda.html)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)"
+    ]
+  }
+}
