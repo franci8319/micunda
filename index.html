@@ -1376,6 +1376,18 @@ async function registrarViaje(conductorId) {
   try {
     const hoy = new Date();
     const fecha = `${hoy.getFullYear()}-${String(hoy.getMonth()+1).padStart(2,'0')}-${String(hoy.getDate()).padStart(2,'0')}`;
+
+    const participantes = [conductorId, ...asistenteIds];
+    const viajesHoy = state.viajes.filter(v => v.fecha === fecha);
+    const duplicado = participantes.find(pid =>
+      viajesHoy.some(v => v.conductor_id === pid || (v.asistentes || []).includes(pid))
+    );
+    if (duplicado) {
+      showToast(`${nombreMiembro(duplicado)} ya está registrado en otro viaje hoy`, 'err');
+      showLoading(false);
+      return;
+    }
+
     const { error } = await db.from('viajes').insert({
       cunda_id:     session.cundaId,
       fecha,
@@ -1692,11 +1704,24 @@ function openEditViaje(id) {
 }
 
 async function saveEdit() {
-  const fecha      = document.getElementById('editFecha').value;
+  const fecha       = document.getElementById('editFecha').value;
   const conductorId = document.getElementById('editConductor').value;
-  const asistentes = state.miembros
+  const asistentes  = state.miembros
     .filter(m => document.getElementById(`eAtt_${m.id}`)?.checked && m.id !== conductorId)
     .map(m => m.id);
+
+  const viajeOriginal = state.viajes.find(x => String(x.id) === String(_editingViajeId));
+
+  // Validar que ningún participante esté ya en otro viaje ese día
+  const participantes = [conductorId, ...asistentes];
+  const viajesMismaFecha = state.viajes.filter(v => v.fecha === fecha && String(v.id) !== String(_editingViajeId));
+  const duplicado = participantes.find(pid =>
+    viajesMismaFecha.some(v => v.conductor_id === pid || (v.asistentes || []).includes(pid))
+  );
+  if (duplicado) {
+    showToast(`${nombreMiembro(duplicado)} ya está en otro viaje ese día`, 'err');
+    return;
+  }
 
   closeModal('modalEditar');
   showLoading(true);
@@ -1709,6 +1734,26 @@ async function saveEdit() {
       updated_at:   new Date().toISOString()
     }).eq('id', _editingViajeId);
     if (error) throw error;
+
+    // Email al conductor anterior si cambió
+    if (viajeOriginal && viajeOriginal.conductor_id !== conductorId) {
+      const anteriorEmail = (state.miembros.find(m => m.id === viajeOriginal.conductor_id) || {}).email;
+      if (anteriorEmail) {
+        const anteriorNombre = nombreMiembro(viajeOriginal.conductor_id);
+        const editadoPor     = nombreMiembro(session.miembroId);
+        await fetch('/api/send-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            to:      [anteriorEmail],
+            subject: 'miCunda — Cambio en un viaje',
+            html:    buildEmailCambioViaje(anteriorNombre, editadoPor, fecha, 'conductor_a_pasajero'),
+            tipo:    'cambio_viaje'
+          })
+        }).catch(() => {});
+      }
+    }
+
     showToast('✓ Viaje actualizado', 'ok');
     await reloadAll();
   } catch (err) {
@@ -1723,12 +1768,33 @@ function openBorrarViaje(id) {
   document.getElementById('modalBorrarConfirm').onclick = async () => {
     closeModal('modalBorrar');
     showLoading(true);
+    const viaje = state.viajes.find(x => String(x.id) === String(_editingViajeId));
     try {
       const { error } = await db.from('viajes').update({
         deleted_by: session.miembroId,
         deleted_at: new Date().toISOString()
       }).eq('id', _editingViajeId);
       if (error) throw error;
+
+      // Email al conductor si otra persona le eliminó el viaje
+      if (viaje && viaje.conductor_id !== session.miembroId) {
+        const conductorEmail  = (state.miembros.find(m => m.id === viaje.conductor_id) || {}).email;
+        if (conductorEmail) {
+          const conductorNombre = nombreMiembro(viaje.conductor_id);
+          const borradoPor      = nombreMiembro(session.miembroId);
+          await fetch('/api/send-email', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              to:      [conductorEmail],
+              subject: 'miCunda — Viaje eliminado',
+              html:    buildEmailCambioViaje(conductorNombre, borradoPor, viaje.fecha, 'viaje_eliminado'),
+              tipo:    'cambio_viaje'
+            })
+          }).catch(() => {});
+        }
+      }
+
       showToast('Viaje eliminado', 'ok');
       await reloadAll();
     } catch (err) {
@@ -2052,6 +2118,35 @@ function closeModal(id, evt) {
 
 function showLoading(v) {
   document.getElementById('loadingOverlay').style.display = v ? 'flex' : 'none';
+}
+
+function buildEmailCambioViaje(destinatario, autor, fecha, tipo) {
+  const [y, mo, d] = fecha.split('-');
+  const fechaLegible = `${d}/${mo}/${y}`;
+  const asunto = tipo === 'viaje_eliminado'
+    ? `<strong>${autor}</strong> ha eliminado el viaje del <strong>${fechaLegible}</strong> en el que eras conductor.`
+    : `<strong>${autor}</strong> ha modificado el viaje del <strong>${fechaLegible}</strong> y ya no figuras como conductor.`;
+  return `<!DOCTYPE html>
+<html lang="es"><head><meta charset="UTF-8"></head>
+<body style="margin:0;padding:0;background:#EDE8DF;font-family:Arial,sans-serif">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#EDE8DF;padding:30px 0">
+    <tr><td align="center">
+      <table width="520" cellpadding="0" cellspacing="0" style="background:#fff;border:2px solid #B8A888;box-shadow:4px 4px 0 rgba(0,0,0,.12);max-width:95%">
+        <tr><td style="background:#1a4a8a;padding:18px 30px;text-align:center">
+          <div style="font-family:Arial,sans-serif;font-size:26px;font-weight:900;color:#fff;letter-spacing:4px">miCunda</div>
+        </td></tr>
+        <tr><td style="padding:28px 32px">
+          <p style="font-size:15px;color:#1A1208;line-height:1.7;margin:0 0 16px">Hola <strong>${destinatario}</strong>,</p>
+          <p style="font-size:15px;color:#1A1208;line-height:1.7;margin:0 0 24px">${asunto}</p>
+          <p style="font-size:13px;color:#888;line-height:1.6;margin:0">Si crees que es un error, contacta con el administrador de tu cunda.</p>
+        </td></tr>
+        <tr><td style="background:#f5f0e8;border-top:1px solid #B8A888;padding:12px 32px;text-align:center">
+          <span style="font-size:11px;color:#aaa">micunda.es · Aviso automático</span>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body></html>`;
 }
 
 let _toastTimer;
