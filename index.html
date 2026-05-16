@@ -1377,17 +1377,6 @@ async function registrarViaje(conductorId) {
     const hoy = new Date();
     const fecha = `${hoy.getFullYear()}-${String(hoy.getMonth()+1).padStart(2,'0')}-${String(hoy.getDate()).padStart(2,'0')}`;
 
-    const participantes = [conductorId, ...asistenteIds];
-    const viajesHoy = state.viajes.filter(v => v.fecha === fecha);
-    const duplicado = participantes.find(pid =>
-      viajesHoy.some(v => v.conductor_id === pid || (v.asistentes || []).includes(pid))
-    );
-    if (duplicado) {
-      showToast(`${nombreMiembro(duplicado)} ya está registrado en otro viaje hoy`, 'err');
-      showLoading(false);
-      return;
-    }
-
     const { error } = await db.from('viajes').insert({
       cunda_id:     session.cundaId,
       fecha,
@@ -1711,17 +1700,6 @@ async function saveEdit() {
     .map(m => m.id);
 
   const viajeOriginal = state.viajes.find(x => String(x.id) === String(_editingViajeId));
-
-  // Validar que ningún participante esté ya en otro viaje ese día
-  const participantes = [conductorId, ...asistentes];
-  const viajesMismaFecha = state.viajes.filter(v => v.fecha === fecha && String(v.id) !== String(_editingViajeId));
-  const duplicado = participantes.find(pid =>
-    viajesMismaFecha.some(v => v.conductor_id === pid || (v.asistentes || []).includes(pid))
-  );
-  if (duplicado) {
-    showToast(`${nombreMiembro(duplicado)} ya está en otro viaje ese día`, 'err');
-    return;
-  }
 
   closeModal('modalEditar');
   showLoading(true);
