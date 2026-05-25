@@ -902,6 +902,10 @@
         <option value="editor">Editor</option>
       </select>
     </div>
+    <div class="form-field">
+      <label class="form-label">Fecha de incorporación</label>
+      <input type="date" id="modalEditarIncorporado" class="form-input">
+    </div>
     <div id="modalEditarErr" style="font-family:'Oswald',sans-serif;font-size:13px;color:var(--rojo);min-height:16px;margin-bottom:8px"></div>
     <div class="modal-btns">
       <button class="btn-cancel" onclick="closeModal('modalEditarMiembro')">Cancelar</button>
@@ -1881,13 +1885,15 @@ function openEditarMiembro(id) {
     rolField.style.display = '';
     rolSel.value = m.rol;
   }
+  document.getElementById('modalEditarIncorporado').value = m.incorporado_at || '';
   document.getElementById('modalEditarMiembro').style.display = 'flex';
 }
 
 async function guardarEditarMiembro() {
-  const email = document.getElementById('modalEditarEmail').value.trim().toLowerCase();
-  const pwd   = document.getElementById('modalEditarPwd').value;
-  const errEl = document.getElementById('modalEditarErr');
+  const email       = document.getElementById('modalEditarEmail').value.trim().toLowerCase();
+  const pwd         = document.getElementById('modalEditarPwd').value;
+  const incorporado = document.getElementById('modalEditarIncorporado').value;
+  const errEl       = document.getElementById('modalEditarErr');
   errEl.textContent = '';
   if (!email) { errEl.textContent = 'El email no puede estar vacío'; return; }
   const rolField  = document.getElementById('modalEditarRolField');
@@ -1896,7 +1902,8 @@ async function guardarEditarMiembro() {
   showLoading(true);
   try {
     const update = { email };
-    if (nuevoRol) update.rol = nuevoRol;
+    if (nuevoRol)    update.rol            = nuevoRol;
+    if (incorporado) update.incorporado_at = incorporado;
     const { error: eErr } = await db.from('miembros').update(update).eq('id', _editarMiembroId);
     if (eErr) throw eErr;
     if (pwd) {
