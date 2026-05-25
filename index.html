@@ -2000,6 +2000,15 @@ async function saveImportViaje() {
     });
     if (error) throw error;
 
+    // Actualizar incorporado_at de participantes si la fecha del viaje es anterior
+    const participantes = [conductorId, ...asistentes];
+    await Promise.all(participantes.map(pid => {
+      const m = state.miembros.find(x => x.id === pid);
+      if (m && m.incorporado_at && fecha < m.incorporado_at) {
+        return db.from('miembros').update({ incorporado_at: fecha }).eq('id', pid);
+      }
+    }).filter(Boolean));
+
     _importCount++;
     const conductor = state.miembrosActivos.find(m => m.id === conductorId);
     const [y, mo, d] = fecha.split('-');
