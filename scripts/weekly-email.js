@@ -171,6 +171,12 @@ async function main() {
     const miembrosConEmail = miembros.filter(m => m.email);
     if (!miembrosConEmail.length) continue;
 
+    const viajesSemana = viajes.filter(v => v.fecha >= start && v.fecha <= end);
+    if (!viajesSemana.length && !modificados.length) {
+      console.log(`[${cunda.nombre}] Sin actividad esta semana, se omite`);
+      continue;
+    }
+
     const summaryHTML        = buildWeeklySummary(miembros, viajes, start, end);
     const modificacionesHTML = buildModificaciones(miembros, modificados);
 
