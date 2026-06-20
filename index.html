@@ -1559,6 +1559,11 @@ function renderCuadrante() {
   }
 
   cont.innerHTML = html;
+
+  // Mostrar el viaje más reciente de cada bloque sin scroll manual
+  cont.querySelectorAll('.cuadrante-scroll').forEach(el => {
+    el.scrollLeft = el.scrollWidth;
+  });
 }
 
 function toggleSection(contentId, iconId) {
@@ -1568,6 +1573,11 @@ function toggleSection(contentId, iconId) {
   const visible = content.style.display === 'none';
   content.style.display = visible ? 'block' : 'none';
   if (icon) icon.className = visible ? 'bi bi-eye' : 'bi bi-eye-slash';
+  if (visible) {
+    content.querySelectorAll('.cuadrante-scroll').forEach(el => {
+      el.scrollLeft = el.scrollWidth;
+    });
+  }
 }
 
 async function restaurarGrupo(key) {
