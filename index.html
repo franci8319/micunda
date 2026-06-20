@@ -2118,6 +2118,11 @@ function switchTab(tabId) {
   document.querySelectorAll('.app-nav-btn').forEach(b => b.classList.remove('active'));
   document.getElementById(tabId).classList.add('active');
   document.querySelector(`[data-tab="${tabId}"]`)?.classList.add('active');
+  if (tabId === 'tabCuadrante') {
+    document.querySelectorAll('#tabCuadrante .cuadrante-scroll').forEach(el => {
+      el.scrollLeft = el.scrollWidth;
+    });
+  }
 }
 
 function closeModal(id, evt) {
